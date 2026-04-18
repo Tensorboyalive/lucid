@@ -14,9 +14,48 @@ import { StreamStatus } from "@/components/surfaces/StreamStatus";
 import {
   DEMO_URLS,
   mockStreamScore,
+  MOCK_RESULT,
   type ScoreResult,
   type WeaknessCallout,
 } from "@/lib/mock";
+
+// Pre-computed demo variants. Clicking a demo chip skips streaming and
+// jumps straight to the done state — presentation mode.
+const DEMO_PRESETS: Record<string, ScoreResult> = {
+  [DEMO_URLS[0].url]: MOCK_RESULT,
+  [DEMO_URLS[1].url]: {
+    ...MOCK_RESULT,
+    id: "mock-reel-talking-head",
+    sourceUrl: DEMO_URLS[1].url,
+    scores: { reward: 5.8, emotion: 6.0, attention: 6.8, memory: 5.9, overall: 6.2 },
+    verdict: "MODERATE POTENTIAL",
+    verdictTone: "moderate",
+    topMoment: {
+      timestamp: "0:09",
+      why: "Single cutaway lifts attention to 1.1σ. Only real peak in the cut.",
+    },
+    bottomMoment: {
+      timestamp: "0:18",
+      why: "Long static hold. All four networks flatten under 0.4σ for 4 seconds.",
+    },
+  },
+  [DEMO_URLS[2].url]: {
+    ...MOCK_RESULT,
+    id: "mock-reel-montage",
+    sourceUrl: DEMO_URLS[2].url,
+    scores: { reward: 9.0, emotion: 8.5, attention: 9.1, memory: 8.3, overall: 8.7 },
+    verdict: "EXPLOSIVE",
+    verdictTone: "explosive",
+    topMoment: {
+      timestamp: "0:04",
+      why: "Beat-matched montage fires reward + attention together. Peak 2.3σ.",
+    },
+    bottomMoment: {
+      timestamp: "0:27",
+      why: "Soft outro. Memory network could loop-back harder with a callback frame.",
+    },
+  },
+};
 
 type Phase = "idle" | "streaming" | "done";
 
@@ -93,6 +132,16 @@ export default function ScorePage() {
   const [result, setResult] = useState<ScoreResult | null>(null);
 
   async function handleSubmit(input: { url?: string; file?: File }) {
+    // Presentation mode: a known demo URL skips all streaming and jumps
+    // to the final done state instantly. No loading, no delay.
+    if (input.url && DEMO_PRESETS[input.url]) {
+      const preset = DEMO_PRESETS[input.url];
+      setResult(preset);
+      setStatus({ label: "Scoring complete", pct: 1 });
+      setPhase("done");
+      return;
+    }
+
     setPhase("streaming");
     setResult(null);
     setStatus({ label: "Queued", pct: 0.02 });

@@ -21,14 +21,128 @@ type Phase = "idle" | "streaming" | "done";
 
 const suggestedHandles = ["@mrbeast", "@zachking", "@brittany.broski", "@tensorboy"];
 
+// Presentation-mode presets. Clicking a suggested handle chip jumps
+// straight to the done state with a curated profile. The typed-handle
+// form still hits the live Apify pipeline.
+function gradient(i: number): string {
+  const pairs = [
+    ["#C53030", "#6D28D9"], ["#E85D1C", "#C53030"], ["#0E7C86", "#6D28D9"],
+    ["#D97706", "#E85D1C"], ["#6D28D9", "#0E7C86"], ["#C53030", "#D97706"],
+    ["#E85D1C", "#6D28D9"], ["#0E7C86", "#D97706"],
+  ];
+  const p = pairs[i % pairs.length];
+  return `linear-gradient(135deg,${p[0]},${p[1]})`;
+}
+
+const PRESET_PROFILES: Record<string, ResearchProfile> = {
+  "@mrbeast": {
+    handle: "@mrbeast",
+    name: "Jimmy Donaldson",
+    followers: "74.8M",
+    avgScore: 9.1,
+    reels: [
+      { id: "r1", thumbnail: gradient(0), thumbnailKind: "gradient", caption: "I gave away a private island to a random stranger.", views: "128M", engagement: "9.4", hookType: "stakes reveal", durationSec: 28, scoreEstimate: 9.4 },
+      { id: "r2", thumbnail: gradient(1), thumbnailKind: "gradient", caption: "$1 vs $1,000,000 hotel. The difference will shock you.", views: "94M", engagement: "9.3", hookType: "contrast pair", durationSec: 34, scoreEstimate: 9.3 },
+      { id: "r3", thumbnail: gradient(2), thumbnailKind: "gradient", caption: "50 hours trapped in a cube underwater.", views: "61M", engagement: "8.8", hookType: "time pressure", durationSec: 41, scoreEstimate: 8.8 },
+      { id: "r4", thumbnail: gradient(3), thumbnailKind: "gradient", caption: "Last to leave a giving-birth sim wins $500,000.", views: "38M", engagement: "8.5", hookType: "absurd challenge", durationSec: 36, scoreEstimate: 8.5 },
+      { id: "r5", thumbnail: gradient(4), thumbnailKind: "gradient", caption: "Surprise strangers with $10,000 for a compliment.", views: "55M", engagement: "8.9", hookType: "warmth x reward", durationSec: 29, scoreEstimate: 8.9 },
+      { id: "r6", thumbnail: gradient(5), thumbnailKind: "gradient", caption: "I bought the last Blockbuster on Earth.", views: "33M", engagement: "8.3", hookType: "nostalgia + stake", durationSec: 45, scoreEstimate: 8.3 },
+      { id: "r7", thumbnail: gradient(6), thumbnailKind: "gradient", caption: "1,000 people vs 1 Navy SEAL for $250,000.", views: "49M", engagement: "8.7", hookType: "asymmetry", durationSec: 38, scoreEstimate: 8.7 },
+      { id: "r8", thumbnail: gradient(7), thumbnailKind: "gradient", caption: "I built the world's most dangerous obstacle course.", views: "27M", engagement: "9.0", hookType: "superlative", durationSec: 52, scoreEstimate: 9.0 },
+    ],
+    patterns: [
+      { title: "Every hook locks stakes inside two seconds", body: "All 8 openers state a dollar amount, a superlative, or a physical impossibility. Reward network fires by 0.6s." },
+      { title: "Contrast or asymmetry primes attention", body: "6 of 8 openers use contrast pairs or asymmetric matchups. Attention network peaks through prediction error." },
+      { title: "Emotional beat every 6 to 8 seconds", body: "Reaction cutaways pulse on a tight metronome. Emotion network never stays flat for more than 8s." },
+      { title: "Memory hooks via oddity", body: "Absurd specifics (private island, 50 hours, obstacle course) create encoding spikes in parahippocampal regions." },
+    ],
+  },
+  "@zachking": {
+    handle: "@zachking",
+    name: "Zach King",
+    followers: "31.2M",
+    avgScore: 9.3,
+    reels: [
+      { id: "r1", thumbnail: gradient(0), thumbnailKind: "gradient", caption: "they caught Banksy", views: "125.5M", engagement: "9.6", hookType: "reveal", durationSec: 18, scoreEstimate: 9.6 },
+      { id: "r2", thumbnail: gradient(1), thumbnailKind: "gradient", caption: "Virtual Holiday illusion. Camera impossible.", views: "3.8M", engagement: "9.0", hookType: "visual misdirect", durationSec: 14, scoreEstimate: 9.0 },
+      { id: "r3", thumbnail: gradient(2), thumbnailKind: "gradient", caption: "Late again... at least I have an iced coffee @nespresso", views: "1.6M", engagement: "8.4", hookType: "product misdirect", durationSec: 22, scoreEstimate: 8.4 },
+      { id: "r4", thumbnail: gradient(3), thumbnailKind: "gradient", caption: "Jump trend but make it physically impossible.", views: "2.1M", engagement: "9.1", hookType: "trend twist", durationSec: 11, scoreEstimate: 9.1 },
+      { id: "r5", thumbnail: gradient(4), thumbnailKind: "gradient", caption: "Perfecting the impossible parkour handoff.", views: "4.7M", engagement: "9.2", hookType: "skill reveal", durationSec: 17, scoreEstimate: 9.2 },
+      { id: "r6", thumbnail: gradient(5), thumbnailKind: "gradient", caption: "Pulling the phone out of the phone.", views: "8.9M", engagement: "9.5", hookType: "recursive frame", durationSec: 13, scoreEstimate: 9.5 },
+      { id: "r7", thumbnail: gradient(6), thumbnailKind: "gradient", caption: "The cat actually caught it. Slow-mo proof.", views: "3.2M", engagement: "8.8", hookType: "authenticity beat", durationSec: 15, scoreEstimate: 8.8 },
+      { id: "r8", thumbnail: gradient(7), thumbnailKind: "gradient", caption: "I am the painting now.", views: "6.4M", engagement: "9.4", hookType: "frame break", durationSec: 12, scoreEstimate: 9.4 },
+    ],
+    patterns: [
+      { title: "The frame always breaks by 0.8s", body: "Every opener establishes a familiar frame, then breaks it with a physical impossibility before the second beat. Attention network peaks at 2.1σ." },
+      { title: "No narration, all diegetic sound", body: "Zero voiceovers across all 8 reels. Music and ambient sfx only. Frees the attention network from parsing language, doubles visual throughput." },
+      { title: "One beat, one reveal", body: "Reels are 11 to 22 seconds. Every second carries a setup or a payoff. No filler frames. Reward network pulses at the reveal moment." },
+      { title: "Loop-back baked in", body: "Most reels end on a frame nearly identical to the opener, inviting a re-watch. Memory network fires at the loop close." },
+    ],
+  },
+  "@brittany.broski": {
+    handle: "@brittany.broski",
+    name: "Brittany Broski",
+    followers: "8.4M",
+    avgScore: 8.5,
+    reels: [
+      { id: "r1", thumbnail: gradient(3), thumbnailKind: "gradient", caption: "POV: you're my therapist and I just told you I named my plant.", views: "12.1M", engagement: "8.9", hookType: "confessional POV", durationSec: 24, scoreEstimate: 8.9 },
+      { id: "r2", thumbnail: gradient(4), thumbnailKind: "gradient", caption: "Reviewing the airport snacks I eat while crying.", views: "8.4M", engagement: "8.7", hookType: "self-deprecation", durationSec: 29, scoreEstimate: 8.7 },
+      { id: "r3", thumbnail: gradient(1), thumbnailKind: "gradient", caption: "Explaining my taste in men to a panel of confused owls.", views: "15.2M", engagement: "9.1", hookType: "absurdist premise", durationSec: 31, scoreEstimate: 9.1 },
+      { id: "r4", thumbnail: gradient(5), thumbnailKind: "gradient", caption: "When the group chat asks who's driving.", views: "6.8M", engagement: "8.3", hookType: "relatable moment", durationSec: 18, scoreEstimate: 8.3 },
+      { id: "r5", thumbnail: gradient(2), thumbnailKind: "gradient", caption: "Ranking every emotion I've had in a grocery store.", views: "4.2M", engagement: "8.1", hookType: "list format", durationSec: 36, scoreEstimate: 8.1 },
+      { id: "r6", thumbnail: gradient(6), thumbnailKind: "gradient", caption: "My chiropractor asked how I sleep. We cried.", views: "9.7M", engagement: "8.8", hookType: "emotional beat", durationSec: 22, scoreEstimate: 8.8 },
+    ],
+    patterns: [
+      { title: "First-person confessional opener", body: "Every reel starts with 'POV' or direct camera address. Parasocial emotional network fires instantly. Insula peaks within 1s." },
+      { title: "Absurd premise, earnest delivery", body: "Setup is surreal. Delivery is sincere. This tension activates both attention and memory. The bit sticks because it shouldn't make sense but does." },
+      { title: "Timing beats visuals", body: "Minimal editing, single-take feel. Pacing is carried entirely by vocal inflection and comedic pause. Under 35s every time." },
+      { title: "Self as punchline", body: "Brittany is always the subject being observed. Ironic distance layers attention on top of emotion. Highest retention cohort: women 18-34." },
+    ],
+  },
+  "@tensorboy": {
+    handle: "@tensorboy",
+    name: "Manav Gupta · tensorboy",
+    followers: "260K",
+    avgScore: 8.2,
+    reels: [
+      { id: "r1", thumbnail: gradient(0), thumbnailKind: "gradient", caption: "I ran my own reels through a fMRI-trained brain model. Here's what I learned.", views: "4.1M", engagement: "9.0", hookType: "stakes reveal", durationSec: 32, scoreEstimate: 9.0 },
+      { id: "r2", thumbnail: gradient(1), thumbnailKind: "gradient", caption: "The AI that's watching your thumb scroll before you do.", views: "2.3M", engagement: "8.6", hookType: "inevitability hook", durationSec: 28, scoreEstimate: 8.6 },
+      { id: "r3", thumbnail: gradient(2), thumbnailKind: "gradient", caption: "Built a tool that scores your reel's neuro-viral potential.", views: "1.8M", engagement: "8.4", hookType: "build-in-public", durationSec: 35, scoreEstimate: 8.4 },
+      { id: "r4", thumbnail: gradient(3), thumbnailKind: "gradient", caption: "Meta just open-sourced a brain. I ran it on a GPU.", views: "3.4M", engagement: "8.9", hookType: "news + action", durationSec: 29, scoreEstimate: 8.9 },
+      { id: "r5", thumbnail: gradient(4), thumbnailKind: "gradient", caption: "Five patterns that predicted every viral short in my dataset.", views: "2.9M", engagement: "8.5", hookType: "list promise", durationSec: 38, scoreEstimate: 8.5 },
+      { id: "r6", thumbnail: gradient(5), thumbnailKind: "gradient", caption: "Why your scroll-stopper is a neuroscience problem, not a luck problem.", views: "1.6M", engagement: "8.1", hookType: "reframe", durationSec: 33, scoreEstimate: 8.1 },
+    ],
+    patterns: [
+      { title: "Technical specificity as the hook", body: "Numbers and named systems ('fMRI-trained', 'GPU', 'five patterns') signal depth in the first 2s. Reward network responds to concrete specificity, not generic claims." },
+      { title: "Build-in-public credibility layer", body: "Showing the tool being built (code, renders, cortex maps) borrows authority from what is visible. Memory encoding is higher on reels that showed process vs only results." },
+      { title: "News as pacing trigger", body: "'Meta just open-sourced' style openers ride attention network urgency. Engagement drops 23% if the news hook lands after the 3s mark." },
+      { title: "Under 40s is the sweet spot", body: "Reels that cross 40s leak 18% retention on the attention network. Tensorboy's best performers all land between 28-35s." },
+    ],
+  },
+};
+
 export default function ResearchPage() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [handle, setHandle] = useState("");
   const [status, setStatus] = useState({ label: "Queued", pct: 0 });
   const [profile, setProfile] = useState<ResearchProfile | null>(null);
 
+  function handleInstantPreset(h: string) {
+    const preset = PRESET_PROFILES[h.toLowerCase()] ?? PRESET_PROFILES[h];
+    if (!preset) return false;
+    setHandle(h);
+    setProfile(preset);
+    saveResearchContext(preset);
+    setStatus({ label: "Research loaded · preset", pct: 1 });
+    setPhase("done");
+    return true;
+  }
+
   async function handleSubmit(h: string) {
     if (!h.trim()) return;
+    // Presentation mode: if the handle matches a curated preset, skip
+    // streaming and Apify entirely.
+    if (handleInstantPreset(h)) return;
     setPhase("streaming");
     setProfile(null);
     setHandle(h);

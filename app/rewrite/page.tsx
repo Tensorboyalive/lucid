@@ -8,7 +8,7 @@ import { HighlightChip } from "@/components/editorial/HighlightChip";
 import { StreamStatus } from "@/components/surfaces/StreamStatus";
 import { ShotCard } from "@/components/surfaces/ShotCard";
 import { ChatDrawer } from "@/components/surfaces/ChatDrawer";
-import { type RewriteResult } from "@/lib/mock-rewrite";
+import { MOCK_REWRITE, type RewriteResult } from "@/lib/mock-rewrite";
 import {
   loadResearchContext,
   type ResearchContext,
@@ -58,8 +58,34 @@ export default function RewritePage() {
     }
   }, []);
 
+  function handleInstantPreset() {
+    // Presentation mode: load the curated sample plan immediately with
+    // no streaming. Script is already pre-filled with the sample draft.
+    setScript(sampleScript);
+    setPlan(MOCK_REWRITE);
+    setTurns([
+      {
+        role: "user",
+        content: `Rewrite this script. Reference: ${reference || "none"}.`,
+      },
+      {
+        role: "gamma",
+        content: `Here is the first pass. Predicted score ${MOCK_REWRITE.predictedScore} (+${MOCK_REWRITE.predictedLift} vs original). Tell me what to sharpen.`,
+      },
+    ]);
+    setStatus({ label: "Rewrite loaded · preset", pct: 1 });
+    setPhase("chat");
+  }
+
   async function handleInitial() {
     if (!script.trim()) return;
+    // Presentation mode: if the user hasn't changed the sample script,
+    // skip the ~15s streaming API call and jump straight to the curated
+    // preset plan. Keeps live demos snappy.
+    if (script.trim() === sampleScript.trim()) {
+      handleInstantPreset();
+      return;
+    }
     setPhase("initial");
     setPlan(null);
     setTurns([]);
