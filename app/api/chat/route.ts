@@ -1,30 +1,56 @@
 import { NextRequest } from "next/server";
 import { streamClaude, hasAnthropic } from "@/lib/providers/anthropic";
 import { VIRAL_ENGINE_SYSTEM } from "@/lib/providers/prompts";
-import { MOCK_RESEARCH } from "@/lib/mock-research";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+interface ReelContext {
+  id: string;
+  caption: string;
+  views?: string;
+  hookType?: string;
+  scoreEstimate?: number;
+}
+
+interface PatternContext {
+  title: string;
+  body: string;
+}
+
 interface ChatBody {
   messages: { role: "user" | "assistant"; content: string }[];
   researchHandle?: string;
+  researchReels?: ReelContext[];
+  researchPatterns?: PatternContext[];
+}
+
+function buildResearchContext(body: ChatBody): string {
+  if (!body.researchHandle) return "";
+  const reelLines = (body.researchReels ?? [])
+    .slice(0, 10)
+    .map(
+      (r, i) =>
+        `  - ${r.id} (${i + 1}): "${r.caption}" · ${r.hookType ?? "—"} · ${r.views ?? "—"} views${
+          r.scoreEstimate !== undefined ? ` · ~${r.scoreEstimate}/10` : ""
+        }`,
+    )
+    .join("\n");
+  const patternLines = (body.researchPatterns ?? [])
+    .map((p) => `  - ${p.title}: ${p.body}`)
+    .join("\n");
+  const reelsBlock = reelLines
+    ? `Top reels:\n${reelLines}\n\n`
+    : "Live scrape did not return reels for this creator. Speak in general neuro-viral patterns and reference the handle directly.\n\n";
+  const patternsBlock = patternLines
+    ? `Patterns the Gamma engine has already identified:\n${patternLines}`
+    : "";
+  return `Research context for ${body.researchHandle}:\n\n${reelsBlock}${patternsBlock}`;
 }
 
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as ChatBody;
-
-  const researchContext =
-    body.researchHandle && body.researchHandle.length > 0
-      ? `Research context for ${body.researchHandle}:\n\nTop reels:\n${MOCK_RESEARCH.reels
-          .map(
-            (r, i) =>
-              `  - ${r.id} (${i + 1}): "${r.caption}" · ${r.hookType} · ${r.views} views · ~${r.scoreEstimate}/10`,
-          )
-          .join("\n")}\n\nPatterns Claude has already identified:\n${MOCK_RESEARCH.patterns
-          .map((p) => `  - ${p.title}: ${p.body}`)
-          .join("\n")}`
-      : "";
+  const researchContext = buildResearchContext(body);
 
   const system =
     VIRAL_ENGINE_SYSTEM + (researchContext ? "\n\n" + researchContext : "");
