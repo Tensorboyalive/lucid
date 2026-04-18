@@ -102,6 +102,7 @@ export default function Home() {
         <Pullquote
           attribution="the thesis"
           tone="ink"
+          className="[&_blockquote]:text-[clamp(3.6rem,calc(1.2rem+6vw),7rem)]"
         >
           Brains follow patterns. Most creators ship content{" "}
           <HighlightChip variant="orange">blind</HighlightChip>. You won’t.
@@ -156,7 +157,7 @@ export default function Home() {
                   <div className="flex items-baseline justify-between">
                     <h3
                       className="serif leading-[1]"
-                      style={{ fontSize: "clamp(1.5rem, calc(1rem + 1.1vw), 2.3rem)" }}
+                      style={{ fontSize: "clamp(1.05rem, calc(0.75rem + 0.75vw), 1.5rem)" }}
                     >
                       {row.k}
                     </h3>
@@ -258,7 +259,7 @@ export default function Home() {
               ].map((t) => (
                 <div
                   key={t.t}
-                  className={`flex flex-col gap-2 rounded-sm border p-5 ${
+                  className={`flex flex-col gap-1 rounded-sm border p-3 ${
                     t.hot
                       ? "bg-viral text-white border-viral"
                       : "bg-cream text-ink border-ink/15"
@@ -269,7 +270,7 @@ export default function Home() {
                   </div>
                   <div
                     className="serif leading-[1]"
-                    style={{ fontSize: "clamp(1.8rem, calc(1rem + 1.2vw), 2.4rem)" }}
+                    style={{ fontSize: "clamp(1.2rem, calc(0.8rem + 0.8vw), 1.6rem)" }}
                   >
                     {t.p}
                   </div>

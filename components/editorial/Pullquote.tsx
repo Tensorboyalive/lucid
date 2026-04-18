@@ -4,10 +4,11 @@ interface Props {
   children: React.ReactNode;
   attribution?: string;
   tone?: "cream" | "ink";
+  size?: "default" | "lg";
   className?: string;
 }
 
-export function Pullquote({ children, attribution, tone = "cream", className }: Props) {
+export function Pullquote({ children, attribution, tone = "cream", size = "default", className }: Props) {
   const isInk = tone === "ink";
   return (
     <figure
@@ -23,9 +24,16 @@ export function Pullquote({ children, attribution, tone = "cream", className }: 
           isInk ? "text-cream" : "text-ink",
         )}
       >
-        “
+        &#x201C;
       </div>
-      <blockquote className="serif text-[clamp(2.6rem, calc(1rem + 4vw), 5rem)] leading-[1]">
+      <blockquote
+        className={cn(
+          "serif leading-[1]",
+          size === "lg"
+            ? "text-[clamp(3.4rem,calc(2rem+5vw),7rem)]"
+            : "text-[clamp(2.6rem,calc(1rem+4vw),5rem)]",
+        )}
+      >
         {children}
       </blockquote>
       {attribution && (
