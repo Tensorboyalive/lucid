@@ -102,6 +102,7 @@ export default function Home() {
         <Pullquote
           attribution="the thesis"
           tone="ink"
+          className="[&_blockquote]:text-[clamp(3.6rem,calc(1.2rem+6vw),7rem)]"
         >
           Brains follow patterns. Most creators ship content{" "}
           <HighlightChip variant="orange">blind</HighlightChip>. You won’t.
