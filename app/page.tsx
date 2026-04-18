@@ -259,7 +259,7 @@ export default function Home() {
               ].map((t) => (
                 <div
                   key={t.t}
-                  className={`flex flex-col gap-2 rounded-sm border p-5 ${
+                  className={`flex flex-col gap-1 rounded-sm border p-3 ${
                     t.hot
                       ? "bg-viral text-white border-viral"
                       : "bg-cream text-ink border-ink/15"
@@ -270,7 +270,7 @@ export default function Home() {
                   </div>
                   <div
                     className="serif leading-[1]"
-                    style={{ fontSize: "clamp(1.8rem, calc(1rem + 1.2vw), 2.4rem)" }}
+                    style={{ fontSize: "clamp(1.2rem, calc(0.8rem + 0.8vw), 1.6rem)" }}
                   >
                     {t.p}
                   </div>
