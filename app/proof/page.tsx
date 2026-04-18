@@ -49,21 +49,12 @@ export default function ProofPage() {
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <a
-              href="https://ai.meta.com/research/publications/tribe-v2/"
+              href="https://ai.meta.com/research/publications/a-foundation-model-of-vision-audition-and-language-for-in-silico-neuroscience/"
               target="_blank"
               rel="noreferrer"
               className="mono inline-flex items-center gap-2 rounded-full border border-ink px-5 py-3 text-[0.72rem] uppercase tracking-[0.24em] transition hover:bg-ink hover:text-cream"
             >
               <span>Read the research</span>
-              <span aria-hidden>↗</span>
-            </a>
-            <a
-              href="https://github.com/Tensorboyalive/neuro-viral-engine"
-              target="_blank"
-              rel="noreferrer"
-              className="mono inline-flex items-center gap-2 rounded-full px-5 py-3 text-[0.72rem] uppercase tracking-[0.24em] text-ink/70 hover:text-viral"
-            >
-              <span>The engine repo</span>
               <span aria-hidden>↗</span>
             </a>
           </div>

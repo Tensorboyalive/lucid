@@ -11,7 +11,6 @@ interface Props {
 
 export function UploadSurface({ onSubmit, disabled }: Props) {
   const [url, setUrl] = useState("");
-  const [dragOver, setDragOver] = useState(false);
 
   return (
     <div className="w-full">
@@ -55,39 +54,20 @@ export function UploadSurface({ onSubmit, disabled }: Props) {
       </div>
 
       <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragOver(true);
-        }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragOver(false);
-          const f = e.dataTransfer.files?.[0];
-          if (f) onSubmit({ file: f });
-        }}
-        className={cn(
-          "mt-4 flex flex-col items-center justify-center gap-3 rounded-sm border border-dashed p-10 text-center transition",
-          dragOver
-            ? "border-viral bg-viral/5"
-            : "border-ink/25 hover:border-ink/50",
-        )}
+        aria-disabled
+        className="mt-4 flex flex-col items-center justify-center gap-3 rounded-sm border border-dashed border-ink/20 bg-ink/[0.02] p-10 text-center"
       >
-        <span className="serif-italic text-[clamp(1.2rem, calc(1rem + 0.6vw), 1.6rem)]">
-          drop a reel file here
+        <span className="mono inline-flex items-center gap-2 rounded-full bg-ink/10 px-3 py-1 text-[0.62rem] uppercase tracking-[0.26em] text-ink/70">
+          <span className="h-1.5 w-1.5 rounded-full bg-viral" />
+          Coming soon
         </span>
-        <label className="mono cursor-pointer text-[0.7rem] uppercase tracking-[0.24em] text-muted hover:text-viral">
-          <input
-            type="file"
-            accept="video/mp4,video/quicktime,video/*"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onSubmit({ file: f });
-            }}
-          />
-          or click to browse
-        </label>
+        <span className="serif-italic text-[clamp(1.2rem, calc(1rem + 0.6vw), 1.6rem)] text-ink/50">
+          direct file upload
+        </span>
+        <span className="mono max-w-[44ch] text-[0.72rem] uppercase tracking-[0.22em] text-muted">
+          Drag-and-drop scoring is rolling out next pass. For now, paste
+          the reel URL and the Beta engine streams it end-to-end.
+        </span>
       </div>
 
       <div className="mt-10">
