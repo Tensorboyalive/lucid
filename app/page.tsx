@@ -157,7 +157,7 @@ export default function Home() {
                   <div className="flex items-baseline justify-between">
                     <h3
                       className="serif leading-[1]"
-                      style={{ fontSize: "clamp(1.5rem, calc(1rem + 1.1vw), 2.3rem)" }}
+                      style={{ fontSize: "clamp(1.05rem, calc(0.75rem + 0.75vw), 1.5rem)" }}
                     >
                       {row.k}
                     </h3>
