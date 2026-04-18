@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { MOCK_RESEARCH } from "@/lib/mock-research";
+import { buildPlaceholderProfile } from "@/lib/mock-research";
 import { upsertCreator } from "@/lib/supabase/repository";
 
 export const runtime = "nodejs";
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
   const token = process.env.APIFY_TOKEN;
   if (!token) {
     return Response.json({
-      profile: { ...MOCK_RESEARCH, handle: "@" + handle },
+      profile: buildPlaceholderProfile(handle),
       fallback: true,
       reason: "no-apify-token",
     });
@@ -144,13 +144,36 @@ export async function POST(req: NextRequest) {
 
     if (!Array.isArray(posts) || posts.length === 0) {
       return Response.json({
-        profile: { ...MOCK_RESEARCH, handle: "@" + handle },
+        profile: buildPlaceholderProfile(handle),
         fallback: true,
         reason: "no-posts-found",
       });
     }
 
-    const capped = posts.slice(0, 12);
+    // Filter out stub items returned by Apify when a handle is private, empty,
+    // or when the actor returned profile metadata instead of posts. A real
+    // reel/post has at least one of: caption, thumbnail, video URL, or likes.
+    const realPosts = posts.filter((p) => {
+      const hasCaption = typeof p.caption === "string" && p.caption.trim().length > 0;
+      const hasMedia =
+        Boolean(pickThumbnail(p)) ||
+        Boolean(p.videoUrl) ||
+        Boolean(p.videoPlayUrl) ||
+        Boolean(p.videoUrlBackup);
+      const hasEngagement = (p.likesCount ?? 0) > 0 || (p.commentsCount ?? 0) > 0;
+      return hasCaption || hasMedia || hasEngagement;
+    });
+
+    if (realPosts.length < 3) {
+      return Response.json({
+        profile: buildPlaceholderProfile(handle),
+        fallback: true,
+        reason: realPosts.length === 0 ? "no-reels-found" : "too-few-reels",
+        meta: { attempted: posts.length, realPosts: realPosts.length },
+      });
+    }
+
+    const capped = realPosts.slice(0, 12);
 
     const reels = capped.map((p, i) => {
       const duration = Math.max(
@@ -182,12 +205,13 @@ export async function POST(req: NextRequest) {
     const avgScore =
       reels.reduce((a, r) => a + r.scoreEstimate, 0) / reels.length;
 
+    const placeholderPatterns = buildPlaceholderProfile(handle).patterns;
     const patterns = [
       {
         title: "Live pattern from the scraped feed",
         body: `Pulled ${reels.length} posts from @${handle} through the ingest pipeline. Hook density, pacing, and emotional cadence are now inputs to the Gamma engine chat below.`,
       },
-      ...MOCK_RESEARCH.patterns.slice(1),
+      ...placeholderPatterns.slice(1),
     ];
 
     const followerCount = capped[0]?.ownerFollowersCount;
@@ -222,7 +246,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[api/scrape-creator] failed:", err);
     return Response.json({
-      profile: { ...MOCK_RESEARCH, handle: "@" + handle },
+      profile: buildPlaceholderProfile(handle),
       fallback: true,
       reason: err instanceof Error ? err.message : "scrape-error",
     });

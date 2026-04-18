@@ -38,7 +38,7 @@ const refineSuggestions = [
 export default function RewritePage() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [script, setScript] = useState(sampleScript);
-  const [reference, setReference] = useState("@mrbeast · $1 vs $1M hotel reel");
+  const [reference, setReference] = useState("research a creator first · context will attach here");
   const [status, setStatus] = useState<{ label: string; pct: number }>({
     label: "Queued",
     pct: 0,
@@ -54,11 +54,7 @@ export default function RewritePage() {
     const ctx = loadResearchContext();
     if (ctx) {
       setResearch(ctx);
-      setReference((prev) =>
-        prev.trim() === "@mrbeast · $1 vs $1M hotel reel"
-          ? `${ctx.profile.handle} · research context attached`
-          : prev,
-      );
+      setReference(`${ctx.profile.handle} · research context attached`);
     }
   }, []);
 

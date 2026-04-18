@@ -5,12 +5,29 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { ChatTurn } from "@/lib/mock-research";
 import { cn } from "@/lib/cn";
 
+interface ReelCtx {
+  id: string;
+  caption: string;
+  views?: string;
+  hookType?: string;
+  scoreEstimate?: number;
+}
+
+interface PatternCtx {
+  title: string;
+  body: string;
+}
+
 interface Props {
   initial: ChatTurn[];
   /** Called when a mock fallback is needed. Return the full mock reply. */
   onSend: (prompt: string) => Promise<ChatTurn>;
   /** Optional research handle to anchor Claude responses. */
   researchHandle?: string;
+  /** Actual scraped reels to ground the model in real captions. */
+  researchReels?: ReelCtx[];
+  /** Patterns already surfaced by the Gamma engine. */
+  researchPatterns?: PatternCtx[];
   /** If true, stream from /api/chat with fallback to onSend. Default true. */
   live?: boolean;
 }
@@ -26,6 +43,8 @@ export function ChatPanel({
   initial,
   onSend,
   researchHandle,
+  researchReels,
+  researchPatterns,
   live = true,
 }: Props) {
   const [turns, setTurns] = useState<ChatTurn[]>(initial);
@@ -82,7 +101,12 @@ export function ChatPanel({
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages, researchHandle }),
+        body: JSON.stringify({
+          messages,
+          researchHandle,
+          researchReels,
+          researchPatterns,
+        }),
       });
       if (!res.ok || !res.body) return { success: false };
       const reader = res.body.getReader();

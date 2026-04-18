@@ -9,8 +9,8 @@ import { ReelGrid } from "@/components/surfaces/ReelGrid";
 import { ChatPanel } from "@/components/surfaces/ChatPanel";
 import { StreamStatus } from "@/components/surfaces/StreamStatus";
 import {
-  MOCK_RESEARCH,
-  MOCK_CHAT_SEED,
+  buildPlaceholderProfile,
+  buildChatSeed,
   mockChatReply,
   type ResearchProfile,
   type ChatTurn,
@@ -67,11 +67,7 @@ export default function ResearchPage() {
     await tick;
 
     setStatus({ label: "Opening chat · anchored to research", pct: 1 });
-    const finalProfile =
-      resolved ?? {
-        ...MOCK_RESEARCH,
-        handle: h.startsWith("@") ? h : "@" + h,
-      };
+    const finalProfile = resolved ?? buildPlaceholderProfile(h);
     setProfile(finalProfile);
     saveResearchContext(finalProfile);
     setPhase("done");
@@ -79,7 +75,8 @@ export default function ResearchPage() {
 
   async function handleChat(prompt: string): Promise<ChatTurn> {
     await new Promise((r) => setTimeout(r, 800));
-    return mockChatReply(prompt);
+    const h = profile?.handle ?? handle;
+    return mockChatReply(prompt, h);
   }
 
   return (
@@ -266,9 +263,17 @@ export default function ResearchPage() {
               </div>
               <div className="col-span-12 lg:col-span-7">
                 <ChatPanel
-                  initial={MOCK_CHAT_SEED}
+                  initial={buildChatSeed(profile.handle, profile.reels.length)}
                   onSend={handleChat}
                   researchHandle={profile.handle}
+                  researchReels={profile.reels.slice(0, 10).map((r) => ({
+                    id: r.id,
+                    caption: r.caption,
+                    views: r.views,
+                    hookType: r.hookType,
+                    scoreEstimate: r.scoreEstimate,
+                  }))}
+                  researchPatterns={profile.patterns}
                   live
                 />
               </div>

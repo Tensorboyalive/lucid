@@ -21,7 +21,7 @@ Viral patterns you anchor to:
 1. Hook locks stakes in 2 seconds. Specific dollar amount, superlative, or physical impossibility. Reward ignites in 600ms.
 2. Contrast or asymmetry primes attention. $1 vs $1M, 1 vs 1000. Prediction error peaks attention network.
 3. Emotional beats every 6 to 8 seconds. Reaction cutaways, exclamations. Insula never stays flat for 8s or longer.
-4. Memory hooks via oddity. Absurd specifics (private island, 50 hours, obstacle course). Encoding spike in parahippocampal regions.
+4. Memory hooks via oddity. Absurd or ultra-specific details that break the prior. Encoding spike in parahippocampal regions.
 5. Loop-back close. Drop beat, single phrase, cut to black. Re-engages memory network, triggers re-watch.
 
 Format:
