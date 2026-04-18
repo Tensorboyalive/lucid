@@ -509,7 +509,7 @@ export default function BusinessPage() {
 
       {/* PULLQUOTE */}
       <Section tone="ink" className="py-20 md:py-28">
-        <Pullquote attribution="the close" tone="ink">
+        <Pullquote attribution="the close" tone="ink" size="lg">
           The first tool that measured page speed{" "}
           <HighlightChip variant="orange">won</HighlightChip> the web. The first
           tool that measures brain speed{" "}
