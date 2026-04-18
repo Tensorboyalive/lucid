@@ -209,10 +209,26 @@ The Alpha engine runs separately on GPU infrastructure, not inside the Replit co
 
 ## Business model
 
-- **Free** one score per day, one research query per day, read-only rewrite plan
-- **Creator $29 per month** unlimited scoring, research, conversational rewrite, history, export
-- **Agency $99 per month** multi-creator workspaces, team brain-network targets, teammates
-- **Enterprise** Alpha engine API, custom network weighting, on-prem option
+Full editorial breakdown lives on [`/business`](app/business). In one paragraph:
+
+A $94B short-form ad market moves every day on guesses. 2.4M creators earn over $100K and already spend $180/month on tools. None of those tools score against the brain. We sell the first one that does, at a price one viral reel repays forever.
+
+| Tier | Price | Who | What |
+|---|---|---|---|
+| **Free** | $0 | The curious | 1 score / 1 research / 1 read-only rewrite per day |
+| **Creator** | **$29 / mo** | Solo creators shipping weekly | Unlimited engine, history, exports, priority queue |
+| **Agency** | $99 / mo | Talent agencies, MCNs, studios | Up to 10 creator profiles, per-brand network presets, team seats |
+| **Enterprise** | Custom | DTC brands, studios, labs | Alpha engine API, custom cortical weights, on-prem option |
+
+**Unit economics.** Hit rate lift 5% → 18% on creator's 170-reel backtest. One extra million-view reel at $8K brand deal ceiling pays for 275 years of Creator tier. The tool sells itself the first time it lands.
+
+**Go to market in three phases.**
+
+1. **Now** · founder-led drop to a 260K audience; every scored reel ships as content. Target 1,000 paying creators in 90 days, ~$29K MRR, CAC near zero.
+2. **H2 2026** · 50 talent agencies at $99 via warm intros. Each agency onboards their creators. Viral coefficient > 1.
+3. **2027** · Alpha engine API for DTC brands and studios. $0.25 per scored asset, 10K/mo minimum. The ad-creative vertical is 100× the creator TAM.
+
+**North star.** $1 of creator spend returns $7 of reel revenue. Y1 target: $3.5M ARR, 10K paying creators.
 
 ## License
 

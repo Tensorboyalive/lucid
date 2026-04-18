@@ -26,6 +26,7 @@ export function Nav({ tone = "cream" }: Props) {
           ["Research", "/research"],
           ["Rewrite", "/rewrite"],
           ["Proof", "/proof"],
+          ["Business", "/business"],
         ].map(([label, href]) => (
           <Link
             key={href}
