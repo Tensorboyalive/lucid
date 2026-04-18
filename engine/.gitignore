@@ -1,0 +1,32 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.mp4
+*.mov
+*.webm
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+nilearn_data/
+.DS_Store
+
+# Inference outputs
+brain_renders/
+cache/
+*.npz
+*.wav
+
+# Brain video (Remotion)
+brain-video/node_modules/
+brain-video/out/
+brain-video/.remotion/
+brain-video/public/*.wav
+brain-video/public/*.gif
+brain-video/public/*.png
+brain-video/public/*_frames/
+
+# Virtual environments
+venv/
+.venv/

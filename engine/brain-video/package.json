@@ -1,0 +1,31 @@
+{
+  "name": "brain-video",
+  "version": "1.0.0",
+  "description": "Remotion pipeline for rendering brain-scan activation videos",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tensorboyalive/neuro-viral-engine.git",
+    "directory": "brain-video"
+  },
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render BrainScanVideo --output out/brain-scan.mp4",
+    "render:all": "remotion render"
+  },
+  "keywords": [],
+  "author": "Manav Gupta (https://github.com/Tensorboyalive)",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@remotion/cli": "^4.0.448",
+    "@remotion/google-fonts": "^4.0.448",
+    "@remotion/media": "^4.0.448",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "remotion": "^4.0.448",
+    "typescript": "^6.0.2"
+  }
+}

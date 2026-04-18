@@ -1,0 +1,28 @@
+VIDEO: April-11_R1.mp4
+NEURO-VIRAL SCORE: 4.6/10
+VERDICT: BELOW AVERAGE
+
+  Reward Network (30%): 4.0/10
+    mean activation: -0.425
+    peak: 0.164 at t=25.0s
+    trend: rising
+    top moments: [25.0]
+
+  Emotion Network (25%): 5.5/10
+    mean activation: 0.308
+    peak: 0.907 at t=25.0s
+    trend: rising
+    top moments: [21.0, 25.0]
+
+  Attention Network (25%): 4.9/10
+    mean activation: 0.034
+    peak: 0.653 at t=25.0s
+    trend: rising
+    top moments: [25.0]
+
+  Memory Network (20%): 4.2/10
+    mean activation: -0.501
+    peak: 0.647 at t=25.0s
+    trend: rising
+    top moments: [25.0]
+

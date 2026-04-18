@@ -1,0 +1,15 @@
+# Neuro-Viral Score Engine — dependencies
+# Install: pip install -r requirements.txt
+
+# Meta TRIBE v2 (installs torch, transformers, etc.)
+tribev2 @ git+https://github.com/facebookresearch/tribev2.git
+
+# Brain parcellation atlas
+nilearn>=0.10.0,<0.12
+
+# Polished terminal output
+rich>=13.0,<14
+
+# Numerical + signal processing
+numpy>=1.24,<3
+scipy>=1.10,<2
