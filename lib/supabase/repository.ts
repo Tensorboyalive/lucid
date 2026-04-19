@@ -7,6 +7,50 @@ import type { Json } from "./types";
 import type { BrainScores, Scene, WeaknessCallout } from "@/lib/mock";
 import type { ShotDirection } from "@/lib/mock-rewrite";
 
+/** Discriminated result for waitlist writes — the API layer decides how to
+ *  surface each case to the browser (see handleWaitlistConflict below). */
+export type WaitlistWriteResult =
+  | { ok: true; duplicate: false }
+  | { ok: true; duplicate: true }
+  | { ok: false; reason: "no_supabase" | "write_failed" };
+
+interface WaitlistInput {
+  email: string;
+  source?: string;
+  referrer?: string;
+  userAgent?: string;
+  ipHash?: string;
+}
+
+/**
+ * Insert a waitlist signup. Distinguishes a fresh signup from a duplicate by
+ * catching the unique-violation on the functional `lower(email)` index.
+ *
+ * Note: we do NOT `.select()` the inserted id. The RLS policy grants anon
+ * INSERT only (no SELECT), so `RETURNING` would silently return null and
+ * complicate the branching. We only need "did it land?" here.
+ */
+export async function addToWaitlist(
+  input: WaitlistInput,
+): Promise<WaitlistWriteResult> {
+  const sb = getSupabase();
+  if (!sb) return { ok: false, reason: "no_supabase" };
+
+  const { error } = await sb.from("waitlist_signups").insert({
+    email: input.email,
+    source: input.source ?? null,
+    referrer: input.referrer ?? null,
+    user_agent: input.userAgent ?? null,
+    ip_hash: input.ipHash ?? null,
+  });
+
+  if (!error) return { ok: true, duplicate: false };
+  // Postgres unique_violation for the lower(email) index.
+  if (error.code === "23505") return { ok: true, duplicate: true };
+  console.error("[waitlist] insert failed:", error);
+  return { ok: false, reason: "write_failed" };
+}
+
 interface CreatorUpsert {
   handle: string;
   displayName?: string;

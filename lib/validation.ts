@@ -139,6 +139,20 @@ export const scrapeCreatorBodySchema = z.object({
 
 export type ScrapeCreatorBodyValidated = z.infer<typeof scrapeCreatorBodySchema>;
 
+// ── /api/waitlist ────────────────────────────────────────────────────────────
+// Keep the surface tiny — email + where-they-came-from. The public/anon key
+// writes these rows, so every field needs a hard cap for abuse resistance.
+export const waitlistBodySchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+  // Free-text signup source so we can paste this link anywhere without
+  // changing code ("twitter-bio", "manavs-newsletter", "pitch-deck", etc.).
+  source: z.string().max(60).optional(),
+  // Captured from document.referrer client-side; optional and length-capped.
+  referrer: z.string().max(500).optional(),
+});
+
+export type WaitlistBodyValidated = z.infer<typeof waitlistBodySchema>;
+
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 /**

@@ -14,6 +14,7 @@ const LINKS = [
   ["Rewrite", "/rewrite"],
   ["Proof", "/proof"],
   ["Business", "/business"],
+  ["Waitlist", "/waitlist"],
 ] as const;
 
 export function Nav({ tone = "cream" }: Props) {

@@ -28,6 +28,9 @@ const LIMITS: Record<string, Limit> = {
   "/api/rewrite": { max: 10, windowMs: 60_000 },
   "/api/chat": { max: 20, windowMs: 60_000 },
   "/api/scrape-creator": { max: 5, windowMs: 60_000 },
+  // Waitlist: a real human signs up once. 3 per 10 min per IP is generous
+  // for retries without giving a bot a firehose.
+  "/api/waitlist": { max: 3, windowMs: 10 * 60_000 },
 };
 
 function clientIp(req: NextRequest): string {
