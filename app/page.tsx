@@ -70,15 +70,12 @@ export default function Home() {
           </div>
           <div className="col-span-12 md:col-span-8">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              {surfaces.map((s, i) => (
+              {surfaces.map((s) => (
                 <Link
                   href={s.href}
                   key={s.tag}
-                  className="group relative flex flex-col gap-6 rounded-sm border border-ink/15 bg-paper p-6 transition hover:border-viral hover:bg-cream md:min-h-[22rem]"
+                  className="group relative flex flex-col gap-5 rounded-sm border border-ink/15 bg-paper p-7 transition hover:border-viral hover:bg-cream md:min-h-[22rem]"
                 >
-                  <div className="mono text-[0.68rem] uppercase tracking-[0.28em] text-muted">
-                    {s.tag}
-                  </div>
                   <h3
                     className="serif leading-[1]"
                     style={{ fontSize: "clamp(2rem, calc(1rem + 1.5vw), 2.75rem)" }}
@@ -128,22 +125,22 @@ export default function Home() {
               {
                 k: "Reward",
                 w: "30%",
-                body: "Orbitofrontal cortex. The “I want to share this” signal. Dopamine arousal.",
+                body: "Fires when your hook promises a payoff in the first two seconds. Orbitofrontal cortex — the “I want to share this” signal.",
               },
               {
                 k: "Emotion",
                 w: "25%",
-                body: "Insula + cingulate. The “I feel this” signal. Salience and valence.",
+                body: "Fires when a face reacts on camera or a beat lands with the cut. Insula + cingulate — the “I feel this” signal.",
               },
               {
                 k: "Attention",
                 w: "25%",
-                body: "Parietal + frontal. The “I can’t look away” signal. Sustained focus.",
+                body: "Fires when the edit refuses to let the eye rest. Parietal + frontal — the “I can’t look away” signal.",
               },
               {
                 k: "Memory",
                 w: "20%",
-                body: "Parahippocampal + DMN. The “I’ll remember this” signal. Encoding strength.",
+                body: "Fires when the close calls back to the open. Parahippocampal + DMN — the “I’ll remember this” signal.",
               },
             ].map((row, idx) => (
               <li
@@ -188,10 +185,14 @@ export default function Home() {
               Ship the reel. <HighlightChip variant="orange">Then</HighlightChip>{" "}
               <span className="serif-italic">ship a better one.</span>
             </h2>
-            <p className="mt-8 max-w-[52ch] text-[1.05rem] leading-[1.55] text-ink/75">
-              This isn’t a dashboard. It’s a feedback loop. Test your content,
-              research what’s working, rewrite with AI that knows the
-              neuroscience, then test again. Every reel informs the next.
+            <p className="serif-italic mt-8 max-w-[46ch] text-[clamp(1.2rem,calc(0.95rem+0.7vw),1.6rem)] leading-[1.35] text-ink/85">
+              The first tool that measured page speed{" "}
+              <HighlightChip variant="orange">won</HighlightChip> the web. The
+              first tool that measures brain speed{" "}
+              <span className="serif-italic">wins</span> the feed.
+            </p>
+            <p className="mono mt-6 text-[0.72rem] uppercase tracking-[0.26em] text-muted">
+              test · research · rewrite · ship · repeat
             </p>
           </div>
           <div className="col-span-12 md:col-span-6">

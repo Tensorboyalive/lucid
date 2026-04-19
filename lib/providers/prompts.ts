@@ -64,6 +64,10 @@ Rules:
 
 ${STYLE_RULES}`;
 
+export const REWRITE_REFINEMENT_SYSTEM = `${REWRITE_SYSTEM}
+
+You are now in REFINEMENT mode. You have already produced a rewrite plan for this creator. The user is asking for a specific change. Return the COMPLETE updated plan as the same JSON shape, incorporating their change. Do not drop shots unless they explicitly ask. After the JSON, add a separator "\\n\\n---\\n\\n" followed by a tight 1-2 sentence narration explaining what you changed and why, in the Viral Engine's voice.`;
+
 export const SCORE_WEAKNESS_SYSTEM = `You are the Gamma engine inside lucid:v2. You synthesize a weakness report from a scored reel.
 
 Given brain network scores plus a scene-by-scene transcript, visual, and audio tags, produce 2 to 4 weakness callouts as JSON.

@@ -86,16 +86,27 @@ async function runLiveStream(
     { label: "Finalizing neuro readout", pct: 0.94, hold: 4000 },
   ];
 
+  // Rotating "still working" labels while we wait on the upstream engine so the
+  // bar never looks frozen. Pct stays honest (0.95/0.97) — motion signals liveness.
+  const waitingLabels: Array<[string, number]> = [
+    ["Gamma engine · weakness synthesis", 0.95],
+    ["Gamma engine · crossing scene boundaries", 0.96],
+    ["Gamma engine · finalizing call-outs", 0.97],
+    ["Almost there · response in flight", 0.97],
+  ];
+
   async function tickerLoop() {
     for (const step of steps) {
       if (cancelled) return;
       onStatus(step.label, step.pct);
       await new Promise((r) => setTimeout(r, step.hold));
     }
-    // Hold at 0.96 while waiting on engine.
+    let waitIdx = 0;
     while (!cancelled) {
-      onStatus("Finalizing neuro readout", 0.96);
-      await new Promise((r) => setTimeout(r, 2000));
+      const [label, pct] = waitingLabels[waitIdx % waitingLabels.length];
+      onStatus(label, pct);
+      waitIdx += 1;
+      await new Promise((r) => setTimeout(r, 2400));
     }
   }
 
@@ -218,7 +229,7 @@ export default function ScorePage() {
     <main>
       <Nav />
 
-      <Section tone="cream" className="pb-14 pt-6 md:pb-24 md:pt-12">
+      <Section tone="cream" className="pb-8 pt-6 md:pb-12 md:pt-10">
         <div className="mono flex items-center gap-3 text-[0.72rem] uppercase tracking-[0.28em] text-muted">
           <span className="inline-block h-[1px] w-10 bg-muted/60" />
           <span>01 · Score</span>
@@ -227,19 +238,18 @@ export default function ScorePage() {
           className="serif mt-8 leading-[0.9] tracking-[-0.02em]"
           style={{ fontSize: "clamp(3rem, calc(1rem + 4vw), 5.3rem)" }}
         >
-          Hold a <HighlightChip variant="orange">mirror</HighlightChip>
+          Hold a <HighlightChip variant="orange" hero>mirror</HighlightChip>
           <br />
           to your reel.
         </h1>
-        <p className="mt-10 max-w-[58ch] text-[clamp(1.05rem, calc(0.95rem + 0.4vw), 1.28rem)] leading-[1.55] text-ink/80">
-          Paste an Instagram URL or drop a file. The Alpha engine scores
-          brain activation frame by frame. The Beta engine reads what was
-          said, seen, and heard. The Gamma engine tells you which moment
-          went dark and why.
+        <p className="mt-8 max-w-[58ch] text-[clamp(1.02rem, calc(0.92rem + 0.35vw), 1.22rem)] leading-[1.5] text-ink/80">
+          Alpha engine scores brain activation frame by frame. Beta reads what
+          was said, seen, and heard. Gamma tells you which moment went dark
+          and why.
         </p>
       </Section>
 
-      <Section tone="paper" className="py-14 md:py-20">
+      <Section tone="paper" className="py-10 md:py-14">
         <UploadSurface
           onSubmit={handleSubmit}
           disabled={phase === "streaming"}

@@ -58,10 +58,14 @@ html, body {
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
   display: inline-block;
-  transform: rotate(-0.3deg);
   white-space: nowrap;
 }
-.highlight        { background: var(--viral-orange); color: #fff; }
+/* Rotation is opt-in via .highlight-hero — default chip is flat for restraint. */
+.highlight-hero {
+  transform: rotate(-0.3deg);
+}
+/* Contrast: ink on orange = 5.7:1 (passes WCAG AA), was white on orange = 3.49:1 (fails). */
+.highlight        { background: var(--viral-orange); color: var(--ink); }
 .highlight-cream  { background: var(--cream); color: var(--ink); border: 1px solid var(--ink); }
 .highlight-ink    { background: var(--ink); color: var(--cream); }
 
@@ -106,4 +110,46 @@ html, body {
   will-change: transform;
 }
 
-::selection { background: var(--viral-orange); color: #fff; }
+/* Global focus-visible ring — raises keyboard-nav polish floor across every interactive element. */
+:where(a, button, input, textarea, select, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid var(--viral-orange);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Indeterminate "waiting on upstream" pulse for the stream status bar after scripted steps. */
+@keyframes streamWait {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+.stream-waiting {
+  animation: streamWait 1.4s ease-in-out infinite;
+}
+
+/* CSS-only hero entrance (replaces framer-motion on Hero — saves bundle KB). */
+@keyframes heroRise {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero-rise {
+  animation: heroRise 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform;
+}
+.hero-rise-delay {
+  animation-delay: 250ms;
+  animation-duration: 1000ms;
+}
+
+/* Respect prefers-reduced-motion globally. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .marquee-track { animation: none; }
+  .stream-waiting { animation: none; opacity: 1; }
+}
+
+::selection { background: var(--viral-orange); color: var(--ink); }

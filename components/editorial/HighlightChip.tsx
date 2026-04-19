@@ -6,6 +6,8 @@ interface Props {
   children: React.ReactNode;
   variant?: Variant;
   italic?: boolean;
+  /** Opt-in slight rotation. Reserve for hero H1 chips so the effect stays rare. */
+  hero?: boolean;
   className?: string;
 }
 
@@ -20,6 +22,7 @@ export function HighlightChip({
   children,
   variant = "orange",
   italic = true,
+  hero = false,
   className,
 }: Props) {
   return (
@@ -27,6 +30,7 @@ export function HighlightChip({
       className={cn(
         variantClass[variant],
         italic && "serif-italic",
+        hero && variant !== "strike" && "highlight-hero",
         className,
       )}
     >

@@ -1,0 +1,82 @@
+import { NextResponse, type NextRequest } from "next/server";
+
+/**
+ * Lightweight per-IP in-memory rate limiter. Sized for hackathon demo traffic —
+ * not a substitute for Upstash/Redis at real scale, but enough to stop a single
+ * bad actor from torching the Anthropic or Gemini quotas in seconds.
+ *
+ * Replace `buckets` with an edge KV store (Upstash, Cloudflare KV) before
+ * horizontal scaling; in-memory Map does not share state across lambdas.
+ */
+interface Bucket {
+  count: number;
+  resetAt: number;
+}
+const buckets = new Map<string, Bucket>();
+
+interface Limit {
+  max: number;
+  windowMs: number;
+}
+
+// score-live is the heaviest endpoint (yt-dlp + 80MB download + Gemini upload);
+// the other three Anthropic-backed routes carry their cost in token spend, so
+// they get windows sized against typical demo usage, not production scale.
+const LIMITS: Record<string, Limit> = {
+  "/api/score-live": { max: 3, windowMs: 60_000 },
+  "/api/score-synth": { max: 10, windowMs: 60_000 },
+  "/api/rewrite": { max: 10, windowMs: 60_000 },
+  "/api/chat": { max: 20, windowMs: 60_000 },
+  "/api/scrape-creator": { max: 5, windowMs: 60_000 },
+};
+
+function clientIp(req: NextRequest): string {
+  const fwd = req.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0]?.trim() ?? "unknown";
+  return req.headers.get("x-real-ip") ?? "unknown";
+}
+
+function normalizeRoute(pathname: string): string | null {
+  for (const route of Object.keys(LIMITS)) {
+    if (pathname === route || pathname.startsWith(route + "/")) return route;
+  }
+  return null;
+}
+
+export function middleware(req: NextRequest) {
+  const route = normalizeRoute(req.nextUrl.pathname);
+  if (!route) return NextResponse.next();
+
+  const limit = LIMITS[route];
+  const ip = clientIp(req);
+  const key = `${ip}:${route}`;
+  const now = Date.now();
+  const bucket = buckets.get(key);
+
+  if (!bucket || bucket.resetAt < now) {
+    buckets.set(key, { count: 1, resetAt: now + limit.windowMs });
+    return NextResponse.next();
+  }
+
+  if (bucket.count >= limit.max) {
+    const retryAfter = Math.max(1, Math.ceil((bucket.resetAt - now) / 1000));
+    return NextResponse.json(
+      { error: "rate_limited", retryAfter },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(retryAfter),
+          "X-RateLimit-Limit": String(limit.max),
+          "X-RateLimit-Remaining": "0",
+        },
+      },
+    );
+  }
+
+  bucket.count += 1;
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/api/:path*"],
+};

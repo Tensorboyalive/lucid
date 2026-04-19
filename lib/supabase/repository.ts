@@ -3,6 +3,7 @@
 // authored fallbacks.
 
 import { getSupabase } from "./client";
+import type { Json } from "./types";
 import type { BrainScores, Scene, WeaknessCallout } from "@/lib/mock";
 import type { ShotDirection } from "@/lib/mock-rewrite";
 
@@ -60,10 +61,10 @@ export async function logScore(input: {
       attention: input.scores.attention,
       memory: input.scores.memory,
       verdict: input.verdict,
-      scenes: input.scenes as unknown as null,
-      weaknesses: input.weaknesses as unknown as null,
-      top_moment: input.topMoment as unknown as null,
-      bottom_moment: input.bottomMoment as unknown as null,
+      scenes: input.scenes as unknown as Json,
+      weaknesses: input.weaknesses as unknown as Json,
+      top_moment: input.topMoment as unknown as Json,
+      bottom_moment: input.bottomMoment as unknown as Json,
     })
     .select("id")
     .single();
@@ -94,8 +95,8 @@ export async function logRewrite(input: {
       predicted_score: input.predictedScore,
       predicted_lift: input.predictedLift,
       summary: input.summary,
-      shots: input.shots as unknown as null,
-      research_context: (input.researchContext ?? null) as unknown as null,
+      shots: input.shots as unknown as Json,
+      research_context: (input.researchContext ?? null) as unknown as Json,
     })
     .select("id")
     .single();

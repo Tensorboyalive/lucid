@@ -12,6 +12,10 @@ import {
   type Network,
   type BrainScores,
 } from "@/lib/mock";
+import { scoreLiveBodySchema, isSafeVideoUrl } from "@/lib/validation";
+
+const MAX_VIDEO_BYTES = 80 * 1024 * 1024;
+const MAX_STDERR_BYTES = 4096;
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -198,14 +202,19 @@ async function runYtDlp(url: string, cwd: string): Promise<void> {
       url,
     ];
     const child = spawn(YT_DLP_PATH, args, { cwd });
+    // Cap the accumulated stderr buffer so a pathological yt-dlp run with
+    // megabytes of stderr can't pin memory or leak paths into our error log.
     let stderr = "";
-    child.stderr.on("data", (chunk) => {
-      stderr += chunk.toString();
+    child.stderr.on("data", (chunk: Buffer | string) => {
+      if (stderr.length < MAX_STDERR_BYTES) {
+        const text = typeof chunk === "string" ? chunk : chunk.toString();
+        stderr += text.slice(0, MAX_STDERR_BYTES - stderr.length);
+      }
     });
     child.on("error", (err) => reject(err));
     child.on("close", (code) => {
       if (code === 0) return resolve();
-      reject(new Error(`yt-dlp exit ${code}: ${stderr.slice(0, 400)}`));
+      reject(new Error(`yt-dlp exit ${code}`));
     });
   });
 }
@@ -225,10 +234,15 @@ async function resolveViaApify(
   const token = process.env.APIFY_TOKEN;
   if (!token) return null;
 
-  const actorUrl = `https://api.apify.com/v2/acts/${APIFY_URL_ACTOR}/run-sync-get-dataset-items?token=${token}`;
+  // Pass token via Authorization header instead of ?token= in the URL so the
+  // secret never appears in proxy/access logs.
+  const actorUrl = `https://api.apify.com/v2/acts/${APIFY_URL_ACTOR}/run-sync-get-dataset-items`;
   const run = await fetch(actorUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({
       resultsType: "posts",
       directUrls: [url],
@@ -246,18 +260,45 @@ async function resolveViaApify(
     shortCode?: string;
   }>;
   const post = items[0];
-  const videoUrl = post?.videoUrl ?? post?.videoPlayUrl ?? post?.videoUrlBackup;
-  if (!videoUrl) return null;
+  const videoUrlRaw =
+    post?.videoUrl ?? post?.videoPlayUrl ?? post?.videoUrlBackup;
+  // SSRF guard: even though Apify returned this URL, it's user-influenced
+  // (Apify follows input directUrls). Lock the fetch target to known CDNs so
+  // link-local metadata IPs and arbitrary domains can never be reached.
+  if (!isSafeVideoUrl(videoUrlRaw)) return null;
+  const videoUrl: string = videoUrlRaw;
 
   const videoRes = await fetch(videoUrl);
   if (!videoRes.ok) {
     throw new Error(`video fetch ${videoRes.status}`);
   }
   const contentLength = Number(videoRes.headers.get("content-length") ?? 0);
-  if (contentLength > 80 * 1024 * 1024) {
+  if (contentLength > MAX_VIDEO_BYTES) {
     throw new Error("video too large");
   }
-  const buf = Buffer.from(await videoRes.arrayBuffer());
+  // Cap on bytes actually streamed so a missing/wrong Content-Length header
+  // cannot OOM the function via chunked-transfer-encoding.
+  const body = videoRes.body;
+  if (!body) return null;
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > MAX_VIDEO_BYTES) {
+      try {
+        await reader.cancel();
+      } catch {
+        /* ignore */
+      }
+      throw new Error("video too large");
+    }
+    chunks.push(value);
+  }
+  const buf = Buffer.concat(chunks.map((c) => Buffer.from(c)));
   const filename = `${post?.shortCode ?? randomUUID()}.mp4`;
   const outPath = path.join(cwd, filename);
   await fs.writeFile(outPath, buf);
@@ -293,8 +334,13 @@ async function deleteUploadedFile(
   if (!name) return;
   try {
     const normalized = name.startsWith("files/") ? name : `files/${name}`;
-    const url = `https://generativelanguage.googleapis.com/v1beta/${normalized}?key=${apiKey}`;
-    await fetch(url, { method: "DELETE" });
+    const url = `https://generativelanguage.googleapis.com/v1beta/${normalized}`;
+    // Pass the key as a header rather than a URL query param so it never
+    // appears in access/proxy logs.
+    await fetch(url, {
+      method: "DELETE",
+      headers: { "x-goog-api-key": apiKey },
+    });
   } catch (err) {
     console.warn("[score-live] delete file failed:", err);
   }
@@ -479,19 +525,16 @@ async function analyzeWithGemini(
 }
 
 export async function POST(req: NextRequest) {
-  let body: LiveBody;
-  try {
-    body = (await req.json()) as LiveBody;
-  } catch {
-    return fallback("invalid JSON body");
-  }
+  const raw = await req.json().catch(() => null);
+  const parsed = scoreLiveBodySchema.safeParse(raw);
+  if (!parsed.success) return fallback("invalid_body");
 
-  const url = body.url?.trim();
-  if (!url) return fallback("missing url");
-  if (!isInstagramUrl(url)) return fallback("not an Instagram reel URL", url);
+  const url = parsed.data.url.trim();
+  if (!url) return fallback("missing_url");
+  if (!isInstagramUrl(url)) return fallback("not_instagram_url", url);
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return fallback("GEMINI_API_KEY not set", url);
+  if (!apiKey) return fallback("gemini_key_missing", url);
 
   const jobId = randomUUID();
   const jobDir = path.join(os.tmpdir(), `lucid-score-${jobId}`);
@@ -517,24 +560,27 @@ export async function POST(req: NextRequest) {
       try {
         downloadedPath = await resolveViaApify(url, jobDir);
       } catch (err) {
-        return fallback(
-          `download failed (yt-dlp: ${ytDlpError ?? "n/a"}, apify: ${
-            err instanceof Error ? err.message : String(err)
-          })`,
-          url,
+        console.warn(
+          "[score-live] apify fallback failed:",
+          err instanceof Error ? err.message : err,
+          "yt-dlp:",
+          ytDlpError,
         );
+        return fallback("download_failed", url);
       }
       if (!downloadedPath) {
-        return fallback(
-          `download failed (yt-dlp: ${ytDlpError ?? "n/a"}, apify: no video url in scrape)`,
-          url,
+        console.warn(
+          "[score-live] no video available — yt-dlp:",
+          ytDlpError,
+          "apify: no safe videoUrl",
         );
+        return fallback("download_failed", url);
       }
     }
 
     const stat = await fs.stat(downloadedPath);
     if (stat.size < 10_000) {
-      return fallback("downloaded file too small", url);
+      return fallback("file_too_small", url);
     }
 
     // 2. Upload to Gemini Files API.
@@ -555,40 +601,42 @@ export async function POST(req: NextRequest) {
 
       await waitForFileActive(client, uploadedName);
     } catch (err) {
-      await deleteUploadedFile(apiKey, uploadedName);
-      return fallback(
-        `upload failed: ${err instanceof Error ? err.message : String(err)}`,
-        url,
+      console.warn(
+        "[score-live] gemini upload failed:",
+        err instanceof Error ? err.message : err,
       );
+      await deleteUploadedFile(apiKey, uploadedName);
+      return fallback("upload_failed", url);
     }
 
     if (!uploadedUri) {
       await deleteUploadedFile(apiKey, uploadedName);
-      return fallback("upload returned no URI", url);
+      return fallback("upload_no_uri", url);
     }
 
     // 3. Gemini scene analysis.
-    let parsed: GeminiResult;
+    let parsedGemini: GeminiResult;
     try {
-      parsed = await analyzeWithGemini(client, uploadedUri, uploadedMime);
+      parsedGemini = await analyzeWithGemini(client, uploadedUri, uploadedMime);
     } catch (err) {
-      return fallback(
-        `engine analysis failed: ${err instanceof Error ? err.message : String(err)}`,
-        url,
+      console.warn(
+        "[score-live] gemini analysis failed:",
+        err instanceof Error ? err.message : err,
       );
+      return fallback("analysis_failed", url);
     }
 
-    if (!Array.isArray(parsed.scenes) || parsed.scenes.length === 0) {
-      return fallback("engine returned no scenes", url);
+    if (!Array.isArray(parsedGemini.scenes) || parsedGemini.scenes.length === 0) {
+      return fallback("no_scenes", url);
     }
 
     // 4. Normalize and score.
-    const scenes: Scene[] = parsed.scenes
+    const scenes: Scene[] = parsedGemini.scenes
       .slice(0, 10)
       .map((s, i) => toScene(s, i));
 
     const durationMs = clamp(
-      Math.round(Number(parsed.durationMs) || scenes[scenes.length - 1].endMs),
+      Math.round(Number(parsedGemini.durationMs) || scenes[scenes.length - 1].endMs),
       1000,
       10 * 60 * 1000,
     );
@@ -596,7 +644,7 @@ export async function POST(req: NextRequest) {
     const scores = heuristicScores({
       scenes,
       durationMs,
-      signals: parsed.brainSignals,
+      signals: parsedGemini.brainSignals,
     });
 
     const { verdict, verdictTone } = verdictFor(scores.overall);
@@ -611,23 +659,24 @@ export async function POST(req: NextRequest) {
       scenes,
       weaknesses: [],
       topMoment: {
-        timestamp: stripEmDashes(String(parsed.topMoment?.timestamp ?? "0:01")),
-        why: stripEmDashes(String(parsed.topMoment?.why ?? "Strong cut early.")),
+        timestamp: stripEmDashes(String(parsedGemini.topMoment?.timestamp ?? "0:01")),
+        why: stripEmDashes(String(parsedGemini.topMoment?.why ?? "Strong cut early.")),
       },
       bottomMoment: {
-        timestamp: stripEmDashes(String(parsed.bottomMoment?.timestamp ?? "0:00")),
+        timestamp: stripEmDashes(String(parsedGemini.bottomMoment?.timestamp ?? "0:00")),
         why: stripEmDashes(
-          String(parsed.bottomMoment?.why ?? "Underfired opening."),
+          String(parsedGemini.bottomMoment?.why ?? "Underfired opening."),
         ),
       },
     };
 
     return Response.json({ result, source: "live" });
   } catch (err) {
-    return fallback(
-      `unexpected error: ${err instanceof Error ? err.message : String(err)}`,
-      url,
+    console.warn(
+      "[score-live] unexpected error:",
+      err instanceof Error ? err.message : err,
     );
+    return fallback("unexpected_error", url);
   } finally {
     // Cleanup best effort. Never let cleanup throw back to the client.
     if (uploadedName) {

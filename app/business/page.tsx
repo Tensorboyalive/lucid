@@ -283,13 +283,11 @@ export default function BusinessPage() {
                 return (
                   <div
                     key={t.tag}
-                    className={`group relative flex flex-col gap-6 rounded-sm border p-6 md:p-7 ${cardTone} ${
-                      isFeatured ? "md:-translate-y-3 md:shadow-[0_30px_80px_-40px_rgba(232,93,28,0.55)]" : ""
-                    }`}
+                    className={`group relative flex flex-col gap-6 rounded-sm border p-6 md:p-7 ${cardTone}`}
                   >
                     {isFeatured && (
                       <span className="mono absolute -top-3 left-6 inline-flex items-center rounded-full bg-ink px-3 py-1 text-[0.62rem] uppercase tracking-[0.28em] text-cream">
-                        Most chosen
+                        the one most tensorboys land on
                       </span>
                     )}
                     <div className="flex items-baseline justify-between">

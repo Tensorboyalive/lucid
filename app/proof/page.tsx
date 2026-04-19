@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { Nav } from "@/components/editorial/Nav";
 import { Section } from "@/components/editorial/Section";
 import { HighlightChip } from "@/components/editorial/HighlightChip";
@@ -17,11 +17,16 @@ const REAL_SCORE = {
 
 export default function ProofPage() {
   const heroRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"],
   });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, -120]);
+  const heroY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    prefersReducedMotion ? [0, 0] : [0, -120],
+  );
 
   return (
     <main>
@@ -38,7 +43,7 @@ export default function ProofPage() {
             style={{ fontSize: "clamp(3rem, calc(1rem + 4vw), 5.3rem)" }}
           >
             A paper came out. So I{" "}
-            <HighlightChip variant="orange">built it</HighlightChip>.
+            <HighlightChip variant="orange" hero>built it</HighlightChip>.
           </h1>
           <p className="mt-10 max-w-[62ch] text-[clamp(1.05rem, calc(0.95rem + 0.4vw), 1.28rem)] leading-[1.55] text-ink/80">
             The research landed last year. A foundation model trained on a
@@ -128,7 +133,10 @@ export default function ProofPage() {
                 muted
                 loop
                 playsInline
-                className="w-full rounded-sm"
+                preload="metadata"
+                width={1080}
+                height={1920}
+                className="h-auto w-full rounded-sm"
                 aria-label="Rendered brain scan video output"
               />
               <div className="mono mt-3 flex items-baseline justify-between text-[0.6rem] uppercase tracking-[0.22em] text-cream/55">
@@ -167,6 +175,10 @@ export default function ProofPage() {
                   <img
                     src="/proof/rotating-reward.gif"
                     alt="Reward network activation, rotating cortex"
+                    width={600}
+                    height={600}
+                    loading="lazy"
+                    decoding="async"
                     className="h-auto w-full"
                   />
                 </div>
@@ -178,7 +190,11 @@ export default function ProofPage() {
                 <div className="overflow-hidden rounded-sm border border-ink/15 bg-cream">
                   <img
                     src="/proof/rotating-max.gif"
-                    alt="Max activation across four networks, rotating cortex"
+                    alt="Max activation across four engagement networks (reward, emotion, attention, memory) rotating around the cortex"
+                    width={600}
+                    height={600}
+                    loading="lazy"
+                    decoding="async"
                     className="h-auto w-full"
                   />
                 </div>

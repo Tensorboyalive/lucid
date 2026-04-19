@@ -1,33 +1,25 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { HighlightChip } from "./HighlightChip";
-
-const ease = [0.16, 1, 0.3, 1] as const;
 
 export function Hero() {
   return (
     <div className="relative overflow-hidden rule-bottom">
       <div className="mx-auto grid w-full max-w-[1400px] grid-cols-12 gap-6 px-6 pb-24 pt-10 md:px-10 md:pt-20 lg:px-14 lg:pb-40 lg:pt-24">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease }}
-          className="col-span-12 lg:col-span-9"
+        <div
+          className="col-span-12 lg:col-span-9 hero-rise"
         >
           <div className="mono mb-10 flex items-center gap-3 text-[0.72rem] uppercase tracking-[0.3em] text-muted">
             <span className="inline-block h-[1px] w-10 bg-muted/60" />
-            <span>Virality intelligence</span>
+            <span>fMRI-backed</span>
             <span className="opacity-40">/</span>
-            <span>neural-grade</span>
+            <span>peer-reviewed weights</span>
           </div>
           <h1
             className="serif leading-[0.92] tracking-[-0.02em]"
             style={{ fontSize: "var(--text-display)" }}
           >
             Going{" "}
-            <HighlightChip variant="orange">viral</HighlightChip>
+            <HighlightChip variant="orange" hero>viral</HighlightChip>
             {" "}
             is a{" "}
             <span className="serif-italic text-ink/95">skill,</span>
@@ -38,12 +30,22 @@ export function Hero() {
             </span>
           </h1>
           <p className="mt-10 max-w-[52ch] text-[clamp(1.05rem, calc(0.95rem + 0.4vw), 1.28rem)] leading-[1.55] text-ink/80">
-            <span className="serif-italic">lucid:v2</span> runs your Instagram reels through a foundation
-            model trained on{" "}
+            The first tool that grades a reel against the brain networks that
+            decide what gets shared. <span className="serif-italic">lucid:v2</span>{" "}
+            runs your Instagram reels through a foundation model trained on{" "}
             <span className="mono text-[0.95em]">1,000+ hours</span> of real
-            fMRI brain scans. Four networks. Reward, emotion, attention,
-            memory. Each one scored every second. You see where brains light up, and
-            where they don’t.
+            fMRI brain scans. Reward, emotion, attention, memory — each scored
+            every second.
+          </p>
+          <p className="mono mt-5 max-w-[52ch] text-[0.68rem] uppercase tracking-[0.24em] text-muted">
+            <a
+              href="https://ai.meta.com/research/publications/a-foundation-model-of-vision-audition-and-language-for-in-silico-neuroscience/"
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-[5px] hover:text-viral"
+            >
+              Meta AI, 2024 · foundation model for in-silico neuroscience ↗
+            </a>
           </p>
           <div className="mt-12 flex flex-wrap items-center gap-4">
             <Link
@@ -64,13 +66,10 @@ export function Hero() {
               </span>
             </Link>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.aside
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.25, ease }}
-          className="col-span-12 lg:col-span-3 lg:self-end"
+        <aside
+          className="col-span-12 lg:col-span-3 lg:self-end hero-rise hero-rise-delay"
         >
           <div className="rule-top pt-6">
             <div className="mono mb-3 text-[0.68rem] uppercase tracking-[0.28em] text-muted">
@@ -117,7 +116,7 @@ export function Hero() {
               <span className="text-muted">Apr 11 · R1</span>
             </div>
           </div>
-        </motion.aside>
+        </aside>
       </div>
     </div>
   );

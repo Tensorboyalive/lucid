@@ -155,7 +155,11 @@ export function ChatDrawer({
                 }}
                 className="flex items-center gap-3"
               >
+                <label htmlFor="chat-drawer-input" className="sr-only">
+                  Ask Gamma to tweak a shot
+                </label>
                 <input
+                  id="chat-drawer-input"
                   value={input}
                   onChange={(e) => onInput(e.target.value)}
                   placeholder="Ask Gamma to tweak a shot"

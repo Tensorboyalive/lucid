@@ -15,10 +15,10 @@ import {
 } from "@/lib/research-context";
 
 const sampleScript = `Most people think virality is luck.
-It's not. We just ran 2,400 reels through a brain model.
-Here are the five patterns that actually predicted virality.
-Pattern one: the hook promises a reward within two seconds.
-Use this, and stop guessing. Link in bio.`;
+It's not. We ran 2,400 reels through a brain model.
+The top reels all did one thing: they promised a payoff in the first two seconds.
+Watch what happens when I rewrite this reel around that one rule.
+You'll stop guessing after this.`;
 
 type Phase = "idle" | "initial" | "chat";
 
@@ -190,8 +190,22 @@ export default function RewritePage() {
   ) {
     let i = 0;
     let active = true;
+    const waiting: Array<[string, number]> = [
+      ["Gamma engine · pulling it in", 0.94],
+      ["Gamma engine · still composing", 0.95],
+      ["Almost there · response in flight", 0.96],
+    ];
+    let waitIdx = 0;
     const next = () => {
-      if (!active || i >= steps.length) return;
+      if (!active) return;
+      if (i >= steps.length) {
+        // Scripted steps done — enter the breathing "waiting on upstream" loop.
+        const [label, pct] = waiting[waitIdx % waiting.length];
+        waitIdx += 1;
+        set({ label, pct });
+        setTimeout(next, 2200);
+        return;
+      }
       const [label, pct, ms] = steps[i++];
       set({ label, pct });
       setTimeout(next, ms);
@@ -218,7 +232,7 @@ export default function RewritePage() {
           style={{ fontSize: "clamp(3rem, calc(1rem + 4vw), 5.3rem)" }}
         >
           Rewrite it like a{" "}
-          <HighlightChip variant="orange">brain</HighlightChip>
+          <HighlightChip variant="orange" hero>brain</HighlightChip>
           <br />
           wants to watch it.
         </h1>
@@ -244,10 +258,24 @@ export default function RewritePage() {
         <Section tone="paper" className="py-14">
           <div className="grid grid-cols-12 gap-8">
             <div className="col-span-12 md:col-span-7">
-              <label className="mono text-[0.72rem] uppercase tracking-[0.26em] text-muted">
-                your draft script
-              </label>
+              <div className="flex flex-wrap items-baseline justify-between gap-3">
+                <label
+                  htmlFor="rewrite-script"
+                  className="mono text-[0.72rem] uppercase tracking-[0.26em] text-muted"
+                >
+                  your draft script
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setScript(sampleScript)}
+                  className="mono inline-flex items-center gap-2 rounded-full border border-ink/20 px-3 py-1 text-[0.62rem] uppercase tracking-[0.22em] text-ink/70 transition hover:border-viral hover:text-viral"
+                >
+                  <span aria-hidden>↺</span>
+                  <span>load sample draft</span>
+                </button>
+              </div>
               <textarea
+                id="rewrite-script"
                 value={script}
                 onChange={(e) => setScript(e.target.value)}
                 rows={10}
@@ -255,10 +283,14 @@ export default function RewritePage() {
               />
             </div>
             <div className="col-span-12 md:col-span-5">
-              <label className="mono text-[0.72rem] uppercase tracking-[0.26em] text-muted">
+              <label
+                htmlFor="rewrite-reference"
+                className="mono text-[0.72rem] uppercase tracking-[0.26em] text-muted"
+              >
                 reference reel (optional)
               </label>
               <input
+                id="rewrite-reference"
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
                 className="serif-italic mt-3 w-full border-b border-ink/30 bg-transparent pb-2 text-[clamp(1rem, calc(0.95rem + 0.4vw), 1.2rem)] outline-none focus:border-viral"
@@ -273,7 +305,7 @@ export default function RewritePage() {
                 className="mono mt-8 inline-flex w-full items-center justify-center gap-3 rounded-full bg-ink px-6 py-4 text-cream transition hover:bg-viral disabled:opacity-40"
               >
                 <span className="text-[0.78rem] uppercase tracking-[0.24em]">
-                  Start the rewrite chat
+                  Generate the shot plan
                 </span>
                 <span aria-hidden>→</span>
               </button>

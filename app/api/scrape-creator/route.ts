@@ -1,13 +1,10 @@
 import { NextRequest } from "next/server";
 import { buildPlaceholderProfile } from "@/lib/mock-research";
 import { upsertCreator } from "@/lib/supabase/repository";
+import { scrapeCreatorBodySchema } from "@/lib/validation";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
-
-interface Body {
-  handle: string;
-}
 
 interface ApifyPost {
   id?: string;
@@ -103,10 +100,15 @@ async function runActorSync(
   actorId: string,
   input: Record<string, unknown>,
 ): Promise<ApifyPost[]> {
-  const url = `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${token}`;
+  // Pass the token via Authorization header instead of ?token= in the URL —
+  // stops the secret showing up in proxy/access logs.
+  const url = `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items`;
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(input),
   });
   if (!res.ok) {
@@ -117,10 +119,14 @@ async function runActorSync(
 }
 
 export async function POST(req: NextRequest) {
-  const body = (await req.json()) as Body;
-  const handle = (body.handle ?? "").trim().replace(/^@/, "").slice(0, 100);
+  const raw = await req.json().catch(() => null);
+  const parsed = scrapeCreatorBodySchema.safeParse(raw);
+  if (!parsed.success) {
+    return Response.json({ error: "invalid_body" }, { status: 400 });
+  }
+  const handle = parsed.data.handle.trim().replace(/^@/, "").slice(0, 100);
   if (!handle) {
-    return Response.json({ error: "handle required" }, { status: 400 });
+    return Response.json({ error: "handle_required" }, { status: 400 });
   }
 
   const token = process.env.APIFY_TOKEN;
@@ -244,11 +250,13 @@ export async function POST(req: NextRequest) {
       source: "apify",
     });
   } catch (err) {
+    // Log the real error server-side only; return an opaque code to the
+    // client so Apify SDK internals (endpoint URLs, auth details) don't leak.
     console.error("[api/scrape-creator] failed:", err);
     return Response.json({
       profile: buildPlaceholderProfile(handle),
       fallback: true,
-      reason: err instanceof Error ? err.message : "scrape-error",
+      reason: "scrape_error",
     });
   }
 }

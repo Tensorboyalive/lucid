@@ -4,39 +4,23 @@ import {
   CLAUDE_MODEL,
   hasAnthropic,
 } from "@/lib/providers/anthropic";
-import { REWRITE_SYSTEM } from "@/lib/providers/prompts";
+import { REWRITE_SYSTEM, REWRITE_REFINEMENT_SYSTEM } from "@/lib/providers/prompts";
 import { MOCK_REWRITE } from "@/lib/mock-rewrite";
 import { logRewrite } from "@/lib/supabase/repository";
+import {
+  rewriteBodySchema,
+  sanitizeForPrompt,
+  type RewriteBodyValidated,
+} from "@/lib/validation";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-interface ResearchContextShape {
-  profile?: {
-    handle?: string;
-    name?: string;
-    patterns?: { title: string; body: string }[];
-    topReelCaptions?: {
-      id: string;
-      caption: string;
-      views: string;
-      hookType: string;
-    }[];
-  };
-}
+type ResearchContextShape = NonNullable<RewriteBodyValidated["researchContext"]>;
 
-interface RewriteBody {
-  script: string;
-  reference?: string;
-  /** Previous assistant turns so Gamma can iterate on its own plan. */
-  history?: { role: "user" | "assistant"; content: string }[];
-  /** The user's latest refinement instruction. */
-  message?: string;
-  /** Previous rewrite plan (JSON) we want to iterate on. */
-  previousPlan?: unknown;
-  /** Optional research context pulled from the user's /research session. */
-  researchContext?: ResearchContextShape;
-}
+/** Keep previousPlan prompt interpolation bounded so a pathological history
+ *  can't balloon the context window silently. */
+const MAX_PREVIOUS_PLAN_CHARS = 8000;
 
 function formatResearchContext(ctx: ResearchContextShape | undefined): string {
   if (!ctx?.profile) return "";
@@ -70,19 +54,20 @@ function formatResearchContext(ctx: ResearchContextShape | undefined): string {
   return blocks.join("\n\n");
 }
 
-const REFINEMENT_SYSTEM = `${REWRITE_SYSTEM}
-
-You are now in REFINEMENT mode. You have already produced a rewrite plan for this creator. The user is asking for a specific change. Return the COMPLETE updated plan as the same JSON shape, incorporating their change. Do not drop shots unless they explicitly ask. After the JSON, add a separator "\\n\\n---\\n\\n" followed by a tight 1-2 sentence narration explaining what you changed and why, in the Viral Engine's voice.`;
-
 export async function POST(req: NextRequest) {
-  const body = (await req.json()) as RewriteBody;
+  const raw = await req.json().catch(() => null);
+  const parsed = rewriteBodySchema.safeParse(raw);
+  if (!parsed.success) {
+    return Response.json({ error: "invalid_body" }, { status: 400 });
+  }
+  const body = parsed.data;
 
   const isRefinement = Boolean(
     body.message && body.history && body.previousPlan,
   );
 
   if (!isRefinement && (!body.script || body.script.trim().length < 10)) {
-    return Response.json({ error: "Script too short" }, { status: 400 });
+    return Response.json({ error: "script_too_short" }, { status: 400 });
   }
 
   const anthropic = getAnthropic();
@@ -96,26 +81,34 @@ export async function POST(req: NextRequest) {
   }
 
   const researchBlock = formatResearchContext(body.researchContext);
-  const baseSystem = isRefinement ? REFINEMENT_SYSTEM : REWRITE_SYSTEM;
+  const baseSystem = isRefinement ? REWRITE_REFINEMENT_SYSTEM : REWRITE_SYSTEM;
   const system = researchBlock
     ? `${baseSystem}\n\n${researchBlock}`
     : baseSystem;
 
+  const safeReference = sanitizeForPrompt(body.reference, 200);
+  const scriptTrimmed = body.script.trim().slice(0, 8000);
+
   let userMessage: string;
   if (isRefinement) {
+    const previousPlanStr = JSON.stringify(body.previousPlan, null, 2).slice(
+      0,
+      MAX_PREVIOUS_PLAN_CHARS,
+    );
+    const safeMessage = sanitizeForPrompt(body.message, 4000);
     userMessage = [
-      `Original draft:\n\`\`\`\n${body.script.trim()}\n\`\`\``,
-      body.reference ? `Reference: ${body.reference}` : undefined,
-      `Current plan (previous Gamma output):\n\`\`\`json\n${JSON.stringify(body.previousPlan, null, 2)}\n\`\`\``,
-      `User's refinement: ${body.message}`,
+      `Original draft:\n\`\`\`\n${scriptTrimmed}\n\`\`\``,
+      safeReference ? `Reference: ${safeReference}` : undefined,
+      `Current plan (previous Gamma output):\n\`\`\`json\n${previousPlanStr}\n\`\`\``,
+      `User's refinement: ${safeMessage}`,
       `Return the updated full plan JSON, then a separator, then narration.`,
     ]
       .filter(Boolean)
       .join("\n\n");
   } else {
     userMessage = [
-      `Draft script:\n\`\`\`\n${body.script.trim()}\n\`\`\``,
-      body.reference ? `Reference reel / creator: ${body.reference}` : undefined,
+      `Draft script:\n\`\`\`\n${scriptTrimmed}\n\`\`\``,
+      safeReference ? `Reference reel / creator: ${safeReference}` : undefined,
       "Return the RewriteResult JSON object. No code fence.",
     ]
       .filter(Boolean)
@@ -205,17 +198,18 @@ export async function POST(req: NextRequest) {
     return Response.json({
       result: normalized,
       narration: narration ?? "",
-      assistantRaw: raw,
+      // Only expose the raw model output in dev — prevents leaking reasoning,
+      // partial JSON, and SDK-wrapped response bodies to the browser in prod.
+      ...(process.env.NODE_ENV !== "production" && { assistantRaw: raw }),
       fallback: false,
     });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "gamma engine error";
-    console.error("[api/rewrite] failed:", msg);
+    console.error("[api/rewrite] failed:", err);
     return Response.json({
       result: MOCK_REWRITE,
       narration: "",
       fallback: true,
-      error: msg,
+      error: "rewrite_engine_unavailable",
     });
   }
 }

@@ -129,7 +129,12 @@ export function ChatPanel({
             } else if (evt.type === "error") {
               return { success: false };
             }
-          } catch {}
+          } catch (parseErr) {
+            // A single malformed SSE frame shouldn't kill the whole stream —
+            // log and continue so the assembled text keeps building.
+            console.warn("[ChatPanel] SSE frame parse failed:", parseErr);
+            continue;
+          }
         }
       }
       return { success: assembled.length > 0, text: assembled };
@@ -241,7 +246,11 @@ export function ChatPanel({
           }}
           className="flex items-center gap-3"
         >
+          <label htmlFor="chat-panel-input" className="sr-only">
+            Ask the viral engine
+          </label>
           <input
+            id="chat-panel-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask the viral engine…"

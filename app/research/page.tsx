@@ -207,7 +207,7 @@ export default function ResearchPage() {
           style={{ fontSize: "clamp(3rem, calc(1rem + 4vw), 5.3rem)" }}
         >
           Reverse-engineer{" "}
-          <HighlightChip variant="orange">virality</HighlightChip>
+          <HighlightChip variant="orange" hero>virality</HighlightChip>
           <br />
           straight from a creator.
         </h1>
@@ -228,10 +228,14 @@ export default function ResearchPage() {
           className="flex flex-col gap-4 md:flex-row md:items-end"
         >
           <div className="flex-1">
-            <label className="mono block text-[0.72rem] uppercase tracking-[0.26em] text-muted">
+            <label
+              htmlFor="creator-handle"
+              className="mono block text-[0.72rem] uppercase tracking-[0.26em] text-muted"
+            >
               Creator handle
             </label>
             <input
+              id="creator-handle"
               value={handle}
               onChange={(e) => setHandle(e.target.value)}
               placeholder="@mrbeast"
@@ -244,7 +248,7 @@ export default function ResearchPage() {
             className="mono inline-flex items-center gap-3 rounded-full bg-ink px-6 py-3.5 text-cream transition hover:bg-viral disabled:opacity-40"
           >
             <span className="text-[0.78rem] uppercase tracking-[0.24em]">
-              Research creator
+              Break it down
             </span>
             <span aria-hidden>→</span>
           </button>

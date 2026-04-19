@@ -8,22 +8,21 @@ import { SCORE_WEAKNESS_SYSTEM } from "@/lib/providers/prompts";
 import {
   MOCK_RESULT,
   type Scene,
-  type BrainScores,
   type WeaknessCallout,
 } from "@/lib/mock";
 import { logScore } from "@/lib/supabase/repository";
+import { scoreSynthBodySchema, sanitizeForPrompt } from "@/lib/validation";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-interface Body {
-  scenes: Scene[];
-  scores: BrainScores;
-  sourceUrl?: string;
-}
-
 export async function POST(req: NextRequest) {
-  const body = (await req.json()) as Body;
+  const raw = await req.json().catch(() => null);
+  const parsed = scoreSynthBodySchema.safeParse(raw);
+  if (!parsed.success) {
+    return Response.json({ error: "invalid_body" }, { status: 400 });
+  }
+  const body = parsed.data;
 
   const anthropic = getAnthropic();
   if (!hasAnthropic() || !anthropic) {
@@ -33,8 +32,9 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  const safeSource = sanitizeForPrompt(body.sourceUrl, 200) || "uploaded reel";
   const userMessage = [
-    `Source: ${body.sourceUrl ?? "uploaded reel"}`,
+    `Source: ${safeSource}`,
     `Brain network scores: ${JSON.stringify(body.scores)}`,
     `Scene timeline (${body.scenes.length} scenes):`,
     JSON.stringify(body.scenes, null, 2),
@@ -81,18 +81,19 @@ export async function POST(req: NextRequest) {
 
     // Persist the score. Fire and forget; failures fall through silently so the
     // user experience is never blocked on the database.
+    const lastScene = body.scenes[body.scenes.length - 1] as
+      | (typeof body.scenes)[number]
+      | undefined;
     void logScore({
       sourceUrl: body.sourceUrl,
       sourceKind: body.sourceUrl?.includes("instagram.com")
         ? "instagram_url"
         : "demo",
       durationMs:
-        body.scenes.length > 0
-          ? body.scenes[body.scenes.length - 1].endMs
-          : 0,
+        lastScene && typeof lastScene.endMs === "number" ? lastScene.endMs : 0,
       scores: body.scores,
       verdict: verdictForScore(body.scores.overall),
-      scenes: body.scenes,
+      scenes: body.scenes as unknown as Scene[],
       weaknesses: finalWeaknesses,
       topMoment: MOCK_RESULT.topMoment,
       bottomMoment: MOCK_RESULT.bottomMoment,
