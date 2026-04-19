@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["*.replit.dev", "*.repl.co", "*.worf.replit.dev"],
   experimental: {
     serverActions: { bodySizeLimit: "50mb" },
   },

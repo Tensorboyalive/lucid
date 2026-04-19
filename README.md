@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/tailwind-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind v4" />
   <img src="https://img.shields.io/badge/python-3.11-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.11" />
   <img src="https://img.shields.io/badge/postgres-supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white" alt="Supabase" />
-  <img src="https://img.shields.io/badge/deploy-replit-F26207?style=flat-square&logo=replit&logoColor=white" alt="Replit" />
+  <img src="https://img.shields.io/badge/deploy-vercel-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel" />
   <img src="https://img.shields.io/badge/license-MIT-0A0A0A?style=flat-square" alt="MIT" />
 </p>
 
@@ -160,9 +160,19 @@ cd engine
 
 ## Deploy
 
-One-click Replit import: **https://replit.com/new/github/Tensorboyalive/lucid**
+One-click deploy to Vercel:
 
-Add to Replit Secrets:
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Tensorboyalive/lucid)
+
+Or from the CLI:
+
+```bash
+npm i -g vercel
+vercel link
+vercel --prod
+```
+
+Add the following to your Vercel project environment variables (Dashboard → Project → Settings → Environment Variables):
 
 | Key | Required | Powers |
 |---|---|---|
@@ -174,6 +184,8 @@ Add to Replit Secrets:
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | no | Database client key |
 
 **Zero-config demo mode.** If no keys are set every flow serves production-quality authored content so the UI never breaks on stage.
+
+> Note: `/score` live-URL mode shells out to `yt-dlp`. On Vercel the default function image does not include that binary. For live URL scoring either (a) set `YT_DLP_PATH` to a bundled binary, (b) run `/score` via file upload, or (c) self-host this route on a Node server with `yt-dlp` on `$PATH`. The file-upload path works everywhere.
 
 ## Architecture
 
@@ -205,7 +217,7 @@ See [`docs/DATABASE.md`](docs/DATABASE.md) for:
 | `/rewrite` initial plan | structured Gamma JSON with validated shape | pre-authored plan |
 | `/rewrite` drawer chat | Gamma refinement with previous plan in scope | static plan |
 
-The Alpha engine runs separately on GPU infrastructure, not inside the Replit container. The [`/proof`](app/proof) page surfaces a real rendered output from one inference run (two Instagram reels, 4.6 and 4.9 out of 10).
+The Alpha engine runs separately on GPU infrastructure, not inside the Vercel function runtime. The [`/proof`](app/proof) page surfaces a real rendered output from one inference run (two Instagram reels, 4.6 and 4.9 out of 10).
 
 ## Business model
 

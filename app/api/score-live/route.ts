@@ -16,9 +16,8 @@ import {
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
-// Default to the binary being on $PATH (true on Replit + most Linux hosts via
-// replit.nix or apt). Only falls back to the dev-machine path if that's all we
-// have. Override with YT_DLP_PATH env var in any deploy.
+// Default to the binary being on $PATH (true on most Linux hosts via apt/brew).
+// Override with YT_DLP_PATH env var in any deploy (Vercel, self-hosted, etc.).
 const YT_DLP_PATH = process.env.YT_DLP_PATH ?? "yt-dlp";
 const PRIMARY_MODEL = "gemini-2.5-pro";
 const FALLBACK_MODEL = "gemini-2.5-flash";

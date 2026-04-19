@@ -36,7 +36,7 @@ export async function* streamClaude(
   if (!client) {
     yield {
       type: "error",
-      error: "ANTHROPIC_API_KEY not set — check .env.local or Replit Secrets",
+      error: "ANTHROPIC_API_KEY not set — check .env.local or Vercel project env vars",
     };
     return;
   }
