@@ -240,68 +240,69 @@ export default function Home() {
         </div>
       </Section>
 
-      <Section tone="paper" className="py-20 md:py-28">
-        <div className="grid grid-cols-12 gap-6 md:gap-10">
-          <div className="col-span-12 md:col-span-5">
-            <div className="mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
-              The business, in one line
+      {!PUBLIC_ONLY && (
+        <Section tone="paper" className="py-20 md:py-28">
+          <div className="grid grid-cols-12 gap-6 md:gap-10">
+            <div className="col-span-12 md:col-span-5">
+              <div className="mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
+                The business, in one line
+              </div>
+              <h2
+                className="serif mt-8 leading-[0.95]"
+                style={{ fontSize: "var(--text-hero)" }}
+              >
+                $29 a month.
+                <br />
+                <HighlightChip variant="orange">One hit</HighlightChip>{" "}
+                <span className="serif-italic">pays for a decade.</span>
+              </h2>
+              <p className="mt-8 max-w-[44ch] text-[1rem] leading-[1.6] text-ink/75">
+                Four tiers, one engine. Free for the curious, $29 for the
+                creator who ships weekly, $99 for the agency running a roster,
+                custom for the studios that buy attention by the GPU hour.
+              </p>
+              <Link
+                href="/business"
+                className="mono mt-8 inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 text-[0.72rem] uppercase tracking-[0.24em] text-cream hover:bg-viral"
+              >
+                See the business page <span aria-hidden>→</span>
+              </Link>
             </div>
-            <h2
-              className="serif mt-8 leading-[0.95]"
-              style={{ fontSize: "var(--text-hero)" }}
-            >
-              $29 a month.
-              <br />
-              <HighlightChip variant="orange">One hit</HighlightChip>{" "}
-              <span className="serif-italic">pays for a decade.</span>
-            </h2>
-            <p className="mt-8 max-w-[44ch] text-[1rem] leading-[1.6] text-ink/75">
-              Four tiers, one engine. Free for the curious, $29 for the creator
-              who ships weekly, $99 for the agency running a roster, custom for
-              the studios that buy attention by the GPU hour.
-            </p>
-            <Link
-              href={PUBLIC_ONLY ? "/waitlist" : "/business"}
-              className="mono mt-8 inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 text-[0.72rem] uppercase tracking-[0.24em] text-cream hover:bg-viral"
-            >
-              {PUBLIC_ONLY ? "Get early access" : "See the business page"}{" "}
-              <span aria-hidden>→</span>
-            </Link>
-          </div>
-          <div className="col-span-12 md:col-span-7">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {[
-                { t: "Free", p: "$0", s: "try the mirror" },
-                { t: "Creator", p: "$29", s: "ship smarter", hot: true },
-                { t: "Agency", p: "$99", s: "run a roster" },
-                { t: "Enterprise", p: "Talk", s: "own the engine" },
-              ].map((t) => (
-                <div
-                  key={t.t}
-                  className={`flex flex-col gap-1 rounded-sm border p-3 ${
-                    t.hot
-                      ? "bg-viral text-white border-viral"
-                      : "bg-cream text-ink border-ink/15"
-                  }`}
-                >
-                  <div className="mono text-[0.62rem] uppercase tracking-[0.28em] opacity-80">
-                    {t.t}
-                  </div>
+            <div className="col-span-12 md:col-span-7">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                {[
+                  { t: "Free", p: "$0", s: "try the mirror" },
+                  { t: "Creator", p: "$29", s: "ship smarter", hot: true },
+                  { t: "Agency", p: "$99", s: "run a roster" },
+                  { t: "Enterprise", p: "Talk", s: "own the engine" },
+                ].map((t) => (
                   <div
-                    className="serif leading-[1]"
-                    style={{ fontSize: "clamp(1.2rem, calc(0.8rem + 0.8vw), 1.6rem)" }}
+                    key={t.t}
+                    className={`flex flex-col gap-1 rounded-sm border p-3 ${
+                      t.hot
+                        ? "bg-viral text-white border-viral"
+                        : "bg-cream text-ink border-ink/15"
+                    }`}
                   >
-                    {t.p}
+                    <div className="mono text-[0.62rem] uppercase tracking-[0.28em] opacity-80">
+                      {t.t}
+                    </div>
+                    <div
+                      className="serif leading-[1]"
+                      style={{ fontSize: "clamp(1.2rem, calc(0.8rem + 0.8vw), 1.6rem)" }}
+                    >
+                      {t.p}
+                    </div>
+                    <div className="mono text-[0.62rem] uppercase tracking-[0.22em] opacity-70">
+                      {t.s}
+                    </div>
                   </div>
-                  <div className="mono text-[0.62rem] uppercase tracking-[0.22em] opacity-70">
-                    {t.s}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </Section>
+        </Section>
+      )}
 
       <Section tone="ink" className="py-20">
         <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">

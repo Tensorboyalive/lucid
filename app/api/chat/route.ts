@@ -17,7 +17,7 @@ function buildResearchContext(body: ChatBodyValidated): string {
     .slice(0, 10)
     .map(
       (r, i) =>
-        `  - ${sanitizeForPrompt(r.id, 100)} (${i + 1}): "${sanitizeForPrompt(r.caption, 500)}" · ${sanitizeForPrompt(r.hookType, 80) || "—"} · ${sanitizeForPrompt(r.views, 30) || "—"} views${
+        `  - ${sanitizeForPrompt(r.id, 100)} (${i + 1}): "${sanitizeForPrompt(r.caption, 500)}" · ${sanitizeForPrompt(r.hookType, 80) || "·"} · ${sanitizeForPrompt(r.views, 30) || "·"} views${
           r.scoreEstimate !== undefined ? ` · ~${r.scoreEstimate}/10` : ""
         }`,
     )

@@ -10,23 +10,15 @@
 const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   {
     q: "What does lucid actually do?",
-    a: "We run your Instagram reel through a foundation model trained on 1,000+ hours of real fMRI brain scans. You get a 0–10 score across four networks — reward, emotion, attention, memory — frame by frame, plus the exact moment where the brain went dark and why.",
-  },
-  {
-    q: "Is my reel private?",
-    a: "Yes. Videos are processed and discarded. We persist the numerical scores and the rewritten scripts you ask for — never the video bytes. Your content is never used to train anyone's model, ours included.",
+    a: "lucid is three engines stitched into one loop. Score grades any Instagram reel against the four fMRI-trained brain networks (reward, emotion, attention, memory) frame by frame, and calls out the exact second the brain went dark. Research pulls any creator's top reels, extracts the patterns that actually moved neurons, and opens a chat with the viral engine. Rewrite takes a draft and returns a shot-by-shot script anchored to the same networks. One loop. Hacking virality at the neural level.",
   },
   {
     q: "When does access open?",
-    a: "In waves. The first 100 seats open in small cohorts so we can watch feedback and fix the rough edges before you ever hit one. You'll get a single email when your wave opens. No drip sequence. No newsletter.",
-  },
-  {
-    q: "What's it going to cost?",
-    a: "$29/month for the creator who ships weekly. $99/month for an agency running a roster. Everyone on this list gets locked-in launch pricing for the first year — even if we raise the price publicly.",
+    a: "In waves. The first 100 seats open very soon, in small cohorts so we can watch feedback and fix the rough edges before you ever hit one. You'll get a single email the moment your wave opens. No drip. No newsletter.",
   },
   {
     q: "Do you sell my email?",
-    a: "No. The list stays with us. One email when it's your turn, one more when the product goes live, that's it. Unsubscribe takes one click.",
+    a: "No. The list stays with us. One email when it's your turn, one more when the product goes live, that's it. Unsubscribe is one click.",
   },
 ];
 

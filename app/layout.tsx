@@ -42,7 +42,7 @@ export const metadata: Metadata = {
         url: "/og?v=default",
         width: 1200,
         height: 630,
-        alt: "lucid:v2 — going viral is a skill, not luck",
+        alt: "lucid:v2 · going viral is a skill, not luck",
       },
     ],
   },

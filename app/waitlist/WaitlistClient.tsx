@@ -109,7 +109,7 @@ export default function WaitlistPage() {
             <p className="mt-8 max-w-[58ch] text-[clamp(1.02rem, calc(0.92rem + 0.35vw), 1.22rem)] leading-[1.5] text-ink/80">
               lucid:v2 is in closed iteration. Drop your email and we&rsquo;ll
               let you in when the engine opens up. No drip, no newsletter, no
-              noise &mdash; one message when it&rsquo;s your turn.
+              noise. One message when it&rsquo;s your turn.
             </p>
           </div>
           <div className="col-span-12 md:col-span-5 md:self-end">
@@ -139,14 +139,14 @@ export default function WaitlistPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={phase === "submitting"}
-                className="serif-italic flex-1 border-b border-ink/30 bg-transparent pb-3 text-[clamp(1.1rem,calc(1rem+0.5vw),1.5rem)] outline-none placeholder:text-ink/30 focus:border-viral disabled:opacity-60"
+                className="serif-italic flex-1 border-b border-ink/30 bg-transparent pb-3 text-[clamp(1.1rem,calc(1rem+0.5vw),1.5rem)] outline-none focus:outline-none focus-visible:outline-none placeholder:text-ink/30 focus:border-ink disabled:opacity-60"
                 aria-invalid={error ? "true" : "false"}
                 aria-describedby={error ? "waitlist-error" : undefined}
               />
               <button
                 type="submit"
                 disabled={phase === "submitting" || !email.trim()}
-                className="mono inline-flex items-center justify-center gap-3 rounded-full bg-ink px-7 py-4 text-cream transition hover:bg-viral hover:text-ink disabled:pointer-events-none disabled:opacity-40"
+                className="mono inline-flex items-center justify-center gap-3 rounded-full bg-ink px-7 py-4 text-cream transition hover:bg-viral hover:text-ink focus:outline-none focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40"
               >
                 <span className="text-[0.78rem] uppercase tracking-[0.24em]">
                   {phase === "submitting" ? "Holding your spot" : "Get on the list"}
@@ -187,8 +187,8 @@ export default function WaitlistPage() {
             </h2>
             <p className="max-w-[58ch] text-[1.05rem] leading-[1.55] text-ink/75">
               {PUBLIC_ONLY
-                ? "Until then, read the receipts. The model is real — the scores below come from actual GPU runs on real reels."
-                : "In the meantime, the product is live in demo mode if you want to poke around. Score a reel, research a creator, rewrite a draft — no keys needed."}
+                ? "Until then, read the receipts. The model is real. The scores below come from actual GPU runs on real reels."
+                : "In the meantime, the product is live in demo mode if you want to poke around. Score a reel, research a creator, rewrite a draft. No keys needed."}
             </p>
             <div className="mono mt-2 flex flex-wrap gap-3 text-[0.72rem] uppercase tracking-[0.24em]">
               {!PUBLIC_ONLY && (
