@@ -49,50 +49,15 @@ const PALETTE = {
   viral: "#F04F25",
 } as const;
 
-// Instrument Serif lives on Google Fonts. We resolve the woff URL from the
-// CSS API each render (cached edge-side). If the fetch fails we fall back to
-// Satori's default sans-serif — the layout still renders, it just loses the
-// editorial feel for one image. Preferable to a 500 on the OG endpoint.
-async function loadSerif(): Promise<ArrayBuffer | null> {
-  try {
-    const cssRes = await fetch(
-      "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap",
-      {
-        headers: {
-          // Google serves different font formats depending on UA. Force woff2.
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-        },
-      },
-    );
-    if (!cssRes.ok) return null;
-    const css = await cssRes.text();
-    const urlMatch = css.match(/src:\s*url\((https:[^)]+\.woff2)\)/);
-    if (!urlMatch) return null;
-    const fontRes = await fetch(urlMatch[1]);
-    if (!fontRes.ok) return null;
-    return await fontRes.arrayBuffer();
-  } catch {
-    return null;
-  }
-}
-
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const variantKey = (searchParams.get("v") ?? "default").toLowerCase();
   const variant = VARIANTS[variantKey] ?? VARIANTS.default;
-
-  const serifBytes = await loadSerif();
-  const fonts = serifBytes
-    ? [
-        {
-          name: "Instrument Serif",
-          data: serifBytes,
-          style: "normal" as const,
-          weight: 400 as const,
-        },
-      ]
-    : undefined;
+  // Show the deploy's own canonical host in the bottom rail so the public
+  // and private builds never advertise each other's URL on the share card.
+  const hostLabel = (
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://lucid-v2.vercel.app"
+  ).replace(/^https?:\/\//, "");
 
   return new ImageResponse(
     (
@@ -105,7 +70,7 @@ export async function GET(req: NextRequest) {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "72px 80px",
-          fontFamily: serifBytes ? "Instrument Serif" : "sans-serif",
+          fontFamily: "serif",
           color: PALETTE.ink,
           position: "relative",
         }}
@@ -205,7 +170,7 @@ export async function GET(req: NextRequest) {
               fontSize: 18,
             }}
           >
-            <span>lucid-v2.vercel.app</span>
+            <span>{hostLabel}</span>
             <span>→</span>
           </span>
         </div>
@@ -214,7 +179,6 @@ export async function GET(req: NextRequest) {
     {
       width: 1200,
       height: 630,
-      fonts,
     },
   );
 }
