@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { PUBLIC_ONLY, isGatedRoute } from "@/lib/config";
+import { getRatelimiter, type RateKind } from "@/lib/ratelimit";
 
 /**
  * Lightweight per-IP in-memory rate limiter. Sized for hackathon demo traffic —
@@ -34,10 +35,33 @@ const LIMITS: Record<string, Limit> = {
   "/api/waitlist": { max: 3, windowMs: 10 * 60_000 },
 };
 
+/**
+ * Trust-aware client-IP extraction.
+ *
+ * Previous implementation read `x-forwarded-for[0]`, which is attacker-
+ * controlled: any client can prepend an arbitrary IP to the chain before
+ * it reaches Vercel's edge. On Vercel, `x-real-ip` is set by the platform
+ * from the TLS-terminating hop and cannot be spoofed by the client, so we
+ * prefer it. `x-vercel-forwarded-for` is a synonym populated by Vercel's
+ * own infrastructure and we accept it too.
+ *
+ * Only as a last resort do we fall back to the *last* entry of a plain
+ * `x-forwarded-for` — the last hop is the one that actually talked to us.
+ */
 function clientIp(req: NextRequest): string {
+  const real = req.headers.get("x-real-ip");
+  if (real) return real.trim();
+  const vercel = req.headers.get("x-vercel-forwarded-for");
+  if (vercel) {
+    const parts = vercel.split(",").map((s) => s.trim()).filter(Boolean);
+    if (parts.length > 0) return parts[0];
+  }
   const fwd = req.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0]?.trim() ?? "unknown";
-  return req.headers.get("x-real-ip") ?? "unknown";
+  if (fwd) {
+    const parts = fwd.split(",").map((s) => s.trim()).filter(Boolean);
+    if (parts.length > 0) return parts[parts.length - 1];
+  }
+  return "unknown";
 }
 
 function normalizeRoute(pathname: string): string | null {
@@ -47,7 +71,12 @@ function normalizeRoute(pathname: string): string | null {
   return null;
 }
 
-export function middleware(req: NextRequest) {
+/** Map an `/api/...` path to the RateKind key used by lib/ratelimit. */
+function kindForRoute(route: string): RateKind {
+  return route.replace(/^\//, "").replace("/", ":") as RateKind;
+}
+
+export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
   // Public-only deploy: gated product routes redirect to the waitlist so the
@@ -83,6 +112,39 @@ export function middleware(req: NextRequest) {
 
   const limit = LIMITS[route];
   const ip = clientIp(req);
+
+  // Prefer the Upstash-backed sliding window when configured — it shares
+  // state across every serverless instance, which the local Map below
+  // cannot. If Upstash is unreachable (outage, transient) we fall through
+  // to the local bucket rather than failing open on the abuse surface.
+  const distributed = getRatelimiter(kindForRoute(route));
+  if (distributed) {
+    try {
+      const res = await distributed.limit(ip);
+      if (!res.success) {
+        const retryAfter = Math.max(
+          1,
+          Math.ceil((res.reset - Date.now()) / 1000),
+        );
+        return NextResponse.json(
+          { error: "rate_limited", retryAfter },
+          {
+            status: 429,
+            headers: {
+              "Retry-After": String(retryAfter),
+              "X-RateLimit-Limit": String(res.limit),
+              "X-RateLimit-Remaining": String(res.remaining),
+              "X-RateLimit-Reset": String(res.reset),
+            },
+          },
+        );
+      }
+      return NextResponse.next();
+    } catch {
+      // Upstash threw — fall through to the in-memory bucket below.
+    }
+  }
+
   const key = `${ip}:${route}`;
   const now = Date.now();
   const bucket = buckets.get(key);

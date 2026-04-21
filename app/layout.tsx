@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { instrumentSerif, inter, jetbrainsMono } from "./fonts";
 import { PostHogProvider } from "@/components/analytics/PostHogProvider";
+import { CookieBanner } from "@/components/editorial/CookieBanner";
 
 /**
  * Canonical URL for `metadataBase`. Overridden per deploy via
@@ -73,6 +74,7 @@ export default function RootLayout({
     >
       <body className="min-h-screen bg-cream text-ink grain">
         <PostHogProvider>{children}</PostHogProvider>
+        <CookieBanner />
         <Analytics />
       </body>
     </html>

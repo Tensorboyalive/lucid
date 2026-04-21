@@ -76,7 +76,10 @@ export async function upsertCreator(input: CreatorUpsert): Promise<string | null
     )
     .select("id")
     .single();
-  if (error) return null;
+  if (error) {
+    console.error("[supabase/upsertCreator] failed:", error.code, error.message);
+    return null;
+  }
   return data?.id ?? null;
 }
 
@@ -112,7 +115,10 @@ export async function logScore(input: {
     })
     .select("id")
     .single();
-  if (error) return null;
+  if (error) {
+    console.error("[supabase/logScore] failed:", error.code, error.message);
+    return null;
+  }
   return data?.id ?? null;
 }
 
@@ -144,7 +150,10 @@ export async function logRewrite(input: {
     })
     .select("id")
     .single();
-  if (error) return null;
+  if (error) {
+    console.error("[supabase/logRewrite] failed:", error.code, error.message);
+    return null;
+  }
   return data?.id ?? null;
 }
 
@@ -155,11 +164,18 @@ export async function logRewriteTurn(
 ): Promise<void> {
   const sb = getSupabase();
   if (!sb) return;
-  await sb.from("rewrite_turns").insert({
+  const { error } = await sb.from("rewrite_turns").insert({
     rewrite_id: rewriteId,
     role,
     content,
   });
+  if (error) {
+    console.error(
+      "[supabase/logRewriteTurn] failed:",
+      error.code,
+      error.message,
+    );
+  }
 }
 
 export async function fetchCachedCreator(

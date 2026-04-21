@@ -16,7 +16,14 @@
 export const PUBLIC_ONLY = process.env.NEXT_PUBLIC_PUBLIC_ONLY === "true";
 
 /** Routes that render in both modes. */
-export const PUBLIC_ROUTES = ["/", "/waitlist", "/proof"] as const;
+export const PUBLIC_ROUTES = [
+  "/",
+  "/waitlist",
+  "/proof",
+  "/privacy",
+  "/terms",
+  "/contact",
+] as const;
 
 /**
  * Routes that only exist on the private deploy. On the public deploy they

@@ -330,6 +330,11 @@ export default function Home() {
               <Link href="/business" className="hover:text-viral">Business</Link>
             )}
             <Link href="/waitlist" className="hover:text-viral">Waitlist</Link>
+            <span aria-hidden className="opacity-40">·</span>
+            <Link href="/privacy" className="hover:text-viral">Privacy</Link>
+            <Link href="/terms" className="hover:text-viral">Terms</Link>
+            <Link href="/contact" className="hover:text-viral">Contact</Link>
+            <span aria-hidden className="opacity-40">·</span>
             <a
               href="https://github.com/Tensorboyalive/lucid"
               className="hover:text-viral"

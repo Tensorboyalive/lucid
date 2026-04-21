@@ -103,6 +103,9 @@ async function runActorSync(
   // Pass the token via Authorization header instead of ?token= in the URL —
   // stops the secret showing up in proxy/access logs.
   const url = `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items`;
+  // run-sync blocks on the actor's cold start, which can run 45s+ at the
+  // p95. 60s is the hard ceiling; the enclosing POST uses 90s maxDuration,
+  // so the fetch times out before the function does.
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -110,6 +113,7 @@ async function runActorSync(
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(input),
+    signal: AbortSignal.timeout(60_000),
   });
   if (!res.ok) {
     throw new Error(`apify ${res.status} ${res.statusText}`);

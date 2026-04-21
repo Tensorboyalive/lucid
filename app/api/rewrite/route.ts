@@ -22,18 +22,29 @@ type ResearchContextShape = NonNullable<RewriteBodyValidated["researchContext"]>
  *  can't balloon the context window silently. */
 const MAX_PREVIOUS_PLAN_CHARS = 8000;
 
+/**
+ * Build the research-context prompt block. Every string that came from the
+ * browser is pushed through `sanitizeForPrompt` first: `researchContext`
+ * can be sourced from Apify's scrape of Instagram captions, which is
+ * attacker-influenced territory. A caption that says "ignore previous
+ * instructions" reaches the Gamma prompt otherwise.
+ */
 function formatResearchContext(ctx: ResearchContextShape | undefined): string {
   if (!ctx?.profile) return "";
   const { handle, name, patterns, topReelCaptions } = ctx.profile;
   const blocks: string[] = [];
+  const creatorLabel = sanitizeForPrompt(handle ?? name ?? "a creator", 120);
   blocks.push(
-    `Research context active. The user just analyzed ${handle ?? name ?? "a creator"}.`,
+    `Research context active. The user just analyzed ${creatorLabel}.`,
   );
   if (patterns && patterns.length > 0) {
     blocks.push(
       "Patterns observed in their top reels:\n" +
         patterns
-          .map((p, i) => `  ${i + 1}. ${p.title}: ${p.body}`)
+          .map(
+            (p, i) =>
+              `  ${i + 1}. ${sanitizeForPrompt(p.title, 120)}: ${sanitizeForPrompt(p.body, 600)}`,
+          )
           .join("\n"),
     );
   }
@@ -43,7 +54,7 @@ function formatResearchContext(ctx: ResearchContextShape | undefined): string {
         topReelCaptions
           .map(
             (r) =>
-              `  ${r.id} (${r.views} views, ${r.hookType}): "${r.caption}"`,
+              `  ${sanitizeForPrompt(r.id, 80)} (${sanitizeForPrompt(r.views, 30)} views, ${sanitizeForPrompt(r.hookType, 80)}): "${sanitizeForPrompt(r.caption, 500)}"`,
           )
           .join("\n"),
     );

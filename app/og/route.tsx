@@ -49,15 +49,46 @@ const PALETTE = {
   viral: "#F04F25",
 } as const;
 
+/**
+ * Fetch the Instrument Serif woff2 we self-host at /public/fonts/. Resolving
+ * it off the incoming request's origin means the edge function hits Vercel's
+ * own static CDN (not an external Google Fonts endpoint that was blocking
+ * silently on the first deploy). If the fetch ever fails we fall through to
+ * Satori's built-in serif, so a broken font never breaks a share preview.
+ */
+async function loadInstrumentSerif(origin: string): Promise<ArrayBuffer | null> {
+  try {
+    const res = await fetch(`${origin}/fonts/instrument-serif.woff2`, {
+      signal: AbortSignal.timeout(3_000),
+    });
+    if (!res.ok) return null;
+    return await res.arrayBuffer();
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const variantKey = (searchParams.get("v") ?? "default").toLowerCase();
+  const reqUrl = new URL(req.url);
+  const variantKey = (reqUrl.searchParams.get("v") ?? "default").toLowerCase();
   const variant = VARIANTS[variantKey] ?? VARIANTS.default;
   // Show the deploy's own canonical host in the bottom rail so the public
   // and private builds never advertise each other's URL on the share card.
   const hostLabel = (
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://lucid-v2.vercel.app"
   ).replace(/^https?:\/\//, "");
+
+  const serif = await loadInstrumentSerif(reqUrl.origin);
+  const fonts = serif
+    ? [
+        {
+          name: "Instrument Serif",
+          data: serif,
+          style: "normal" as const,
+          weight: 400 as const,
+        },
+      ]
+    : undefined;
 
   return new ImageResponse(
     (
@@ -70,7 +101,7 @@ export async function GET(req: NextRequest) {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "72px 80px",
-          fontFamily: "serif",
+          fontFamily: serif ? "Instrument Serif" : "serif",
           color: PALETTE.ink,
           position: "relative",
         }}
@@ -179,6 +210,7 @@ export async function GET(req: NextRequest) {
     {
       width: 1200,
       height: 630,
+      fonts,
     },
   );
 }

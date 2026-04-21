@@ -5,6 +5,7 @@ import {
   addToWaitlist,
   type WaitlistWriteResult,
 } from "@/lib/supabase/repository";
+import { sendWaitlistWelcome } from "@/lib/email/resend";
 
 export const runtime = "nodejs";
 export const maxDuration = 10;
@@ -46,13 +47,29 @@ async function notifySlack(body: {
  * but deliberate anti-profiling move — two signups from the same IP on the
  * same day share a hash, but the hash is useless tomorrow.
  */
+/**
+ * Opaque per-day client hash so we can see repeat-offender patterns without
+ * retaining raw IPs. The salt rotates daily (UTC midnight). A static
+ * `WAITLIST_HASH_PEPPER` env var is mixed in when set so the daily hash is
+ * not enumerable by anyone who knows the date alone.
+ *
+ * IP source prefers Vercel's platform-set `x-real-ip` (un-spoofable) over
+ * `x-forwarded-for[0]` (client-controlled).
+ */
 function hashClient(req: NextRequest): string {
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown";
+  const real = req.headers.get("x-real-ip");
+  const vercel = req.headers.get("x-vercel-forwarded-for");
+  const fwd = req.headers.get("x-forwarded-for");
+  const fwdLast = fwd
+    ? fwd.split(",").map((s) => s.trim()).filter(Boolean).slice(-1)[0]
+    : undefined;
+  const ip = real ?? vercel?.split(",")[0]?.trim() ?? fwdLast ?? "unknown";
   const day = new Date().toISOString().slice(0, 10);
-  return createHash("sha256").update(`${ip}:${day}`).digest("hex").slice(0, 32);
+  const pepper = process.env.WAITLIST_HASH_PEPPER ?? "";
+  return createHash("sha256")
+    .update(`${pepper}:${ip}:${day}`)
+    .digest("hex")
+    .slice(0, 32);
 }
 
 /* ─── DUPLICATE-EMAIL STRATEGY ────────────────────────────────────────────
@@ -144,6 +161,13 @@ export async function POST(req: NextRequest) {
     source: body.source,
     duplicate: result.duplicate === true,
   });
+
+  // Fire-and-forget transactional welcome. Only sent on a fresh signup —
+  // a duplicate would just re-mail someone who already opted in once, which
+  // crosses the "one email when it's your turn" promise on /waitlist.
+  if (!result.duplicate) {
+    void sendWaitlistWelcome(body.email);
+  }
 
   return Response.json({ ok: true, status: handleWaitlistConflict(result) });
 }

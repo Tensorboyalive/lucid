@@ -98,6 +98,10 @@ const networkEnum = z.enum(["reward", "emotion", "attention", "memory"]);
 
 export const scoreSynthBodySchema = z.object({
   sourceUrl: z.string().max(500).optional(),
+  // Scene objects are JSON-stringified into the Claude prompt downstream.
+  // `.strict()` rejects any unknown keys rather than silently passing them
+  // through — without this, a malicious client could inject additional
+  // properties that become part of the LLM context as prompt payload.
   scenes: z
     .array(
       z.object({
@@ -111,7 +115,7 @@ export const scoreSynthBodySchema = z.object({
         strongestNetwork: networkEnum.optional(),
         weakestNetwork: networkEnum.optional(),
         weaknessScore: z.number().min(0).max(1).optional(),
-      }).passthrough(),
+      }).strict(),
     )
     .max(20),
   scores: z.object({

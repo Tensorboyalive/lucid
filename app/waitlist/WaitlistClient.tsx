@@ -267,6 +267,11 @@ export default function WaitlistPage() {
                 </li>
               ))}
             </ul>
+            <div className="mono mt-10 flex flex-wrap gap-x-6 gap-y-2 text-[0.66rem] uppercase tracking-[0.24em] text-cream/50">
+              <a href="/privacy" className="hover:text-viral">Privacy</a>
+              <a href="/terms" className="hover:text-viral">Terms</a>
+              <a href="/contact" className="hover:text-viral">Contact</a>
+            </div>
           </div>
         </div>
       </Section>

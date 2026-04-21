@@ -237,6 +237,10 @@ async function resolveViaApify(
   // Pass token via Authorization header instead of ?token= in the URL so the
   // secret never appears in proxy/access logs.
   const actorUrl = `https://api.apify.com/v2/acts/${APIFY_URL_ACTOR}/run-sync-get-dataset-items`;
+  // Apify run-sync can block for minutes when the actor is cold. A hung
+  // upstream must never drain our full maxDuration budget — 30s is well past
+  // the warm-path latency (~4-8s observed) and trips before the client-side
+  // stream gives up.
   const run = await fetch(actorUrl, {
     method: "POST",
     headers: {
@@ -249,6 +253,7 @@ async function resolveViaApify(
       resultsLimit: 1,
       addParentData: false,
     }),
+    signal: AbortSignal.timeout(30_000),
   });
   if (!run.ok) {
     throw new Error(`apify ${run.status}`);
@@ -268,7 +273,11 @@ async function resolveViaApify(
   if (!isSafeVideoUrl(videoUrlRaw)) return null;
   const videoUrl: string = videoUrlRaw;
 
-  const videoRes = await fetch(videoUrl);
+  // Instagram CDN downloads usually complete in ~10-30s for a single reel.
+  // 90s is the hard ceiling — past that the user has given up anyway.
+  const videoRes = await fetch(videoUrl, {
+    signal: AbortSignal.timeout(90_000),
+  });
   if (!videoRes.ok) {
     throw new Error(`video fetch ${videoRes.status}`);
   }
@@ -340,6 +349,7 @@ async function deleteUploadedFile(
     await fetch(url, {
       method: "DELETE",
       headers: { "x-goog-api-key": apiKey },
+      signal: AbortSignal.timeout(5_000),
     });
   } catch (err) {
     console.warn("[score-live] delete file failed:", err);
