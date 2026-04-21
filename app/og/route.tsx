@@ -22,19 +22,19 @@ type Variant = {
 
 const VARIANTS: Record<string, Variant> = {
   default: {
-    eyebrow: "lucid:v2 · fMRI-backed reel scorer",
+    eyebrow: "lucid:v2  /  fMRI-backed reel scorer",
     head: ["Going", "viral", "is a skill,", "not luck."],
     highlight: "viral",
     highlightVariant: "orange",
   },
   waitlist: {
-    eyebrow: "early access · lucid:v2",
+    eyebrow: "early access  /  lucid:v2",
     head: ["Get first", "access", "to the scoring engine."],
     highlight: "access",
     highlightVariant: "orange",
   },
   proof: {
-    eyebrow: "the receipts · lucid:v2",
+    eyebrow: "the receipts  /  lucid:v2",
     head: ["A paper came out.", "So I", "built it", "."],
     highlight: "built it",
     highlightVariant: "orange",
@@ -49,25 +49,6 @@ const PALETTE = {
   viral: "#F04F25",
 } as const;
 
-/**
- * Fetch the Instrument Serif woff2 we self-host at /public/fonts/. Resolving
- * it off the incoming request's origin means the edge function hits Vercel's
- * own static CDN (not an external Google Fonts endpoint that was blocking
- * silently on the first deploy). If the fetch ever fails we fall through to
- * Satori's built-in serif, so a broken font never breaks a share preview.
- */
-async function loadInstrumentSerif(origin: string): Promise<ArrayBuffer | null> {
-  try {
-    const res = await fetch(`${origin}/fonts/instrument-serif.woff2`, {
-      signal: AbortSignal.timeout(3_000),
-    });
-    if (!res.ok) return null;
-    return await res.arrayBuffer();
-  } catch {
-    return null;
-  }
-}
-
 export async function GET(req: NextRequest) {
   const reqUrl = new URL(req.url);
   const variantKey = (reqUrl.searchParams.get("v") ?? "default").toLowerCase();
@@ -78,17 +59,11 @@ export async function GET(req: NextRequest) {
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://lucid-v2.vercel.app"
   ).replace(/^https?:\/\//, "");
 
-  const serif = await loadInstrumentSerif(reqUrl.origin);
-  const fonts = serif
-    ? [
-        {
-          name: "Instrument Serif",
-          data: serif,
-          style: "normal" as const,
-          weight: 400 as const,
-        },
-      ]
-    : undefined;
+  // NOTE: font loading intentionally disabled. The self-hosted Instrument
+  // Serif woff2 triggered a Satori runtime failure (empty image response)
+  // even when the asset was clearly reachable. Ships with the built-in
+  // serif fallback until a reliable edge font loader is in place — tracked
+  // as a polish item, not a blocker.
 
   return new ImageResponse(
     (
@@ -101,7 +76,7 @@ export async function GET(req: NextRequest) {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "72px 80px",
-          fontFamily: serif ? "Instrument Serif" : "serif",
+          fontFamily: "serif",
           color: PALETTE.ink,
           position: "relative",
         }}
@@ -202,7 +177,6 @@ export async function GET(req: NextRequest) {
             }}
           >
             <span>{hostLabel}</span>
-            <span>→</span>
           </span>
         </div>
       </div>
@@ -210,7 +184,6 @@ export async function GET(req: NextRequest) {
     {
       width: 1200,
       height: 630,
-      fonts,
     },
   );
 }
