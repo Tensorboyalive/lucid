@@ -107,7 +107,7 @@ const moat = [
   {
     k: "04",
     title: "The horizon is bigger than creators",
-    body: "The same engine scores ad creatives for DTC brands, trailer cuts for studios, and training stimuli for labs. Creators first — because they test every day. Then everyone who buys attention.",
+    body: "The same engine scores ad creatives for DTC brands, trailer cuts for studios, and training stimuli for labs. Creators first, because they test every day. Then everyone who buys attention.",
   },
 ];
 
@@ -116,7 +116,7 @@ const roiRows = [
   { label: "Hit rate (> 1M views)", you: "5 %", lucid: "18 %" },
   { label: "Brand deal ceiling / reel", you: "$3K", lucid: "$8K" },
   { label: "Expected monthly ceiling", you: "$3K", lucid: "$28K" },
-  { label: "Cost of lucid Creator", you: "—", lucid: "$29" },
+  { label: "Cost of lucid Creator", you: "·", lucid: "$29" },
 ];
 
 const gtm = [

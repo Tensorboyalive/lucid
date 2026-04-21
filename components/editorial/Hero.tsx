@@ -34,7 +34,7 @@ export function Hero() {
             decide what gets shared. <span className="serif-italic">lucid:v2</span>{" "}
             runs your Instagram reels through a foundation model trained on{" "}
             <span className="mono text-[0.95em]">1,000+ hours</span> of real
-            fMRI brain scans. Reward, emotion, attention, memory — each scored
+            fMRI brain scans. Reward, emotion, attention, memory. Each scored
             every second.
           </p>
           <p className="mono mt-5 max-w-[52ch] text-[0.68rem] uppercase tracking-[0.24em] text-muted">

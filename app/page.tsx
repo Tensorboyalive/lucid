@@ -125,22 +125,22 @@ export default function Home() {
               {
                 k: "Reward",
                 w: "30%",
-                body: "Fires when your hook promises a payoff in the first two seconds. Orbitofrontal cortex — the “I want to share this” signal.",
+                body: "Fires when your hook promises a payoff in the first two seconds. Orbitofrontal cortex. The “I want to share this” signal.",
               },
               {
                 k: "Emotion",
                 w: "25%",
-                body: "Fires when a face reacts on camera or a beat lands with the cut. Insula + cingulate — the “I feel this” signal.",
+                body: "Fires when a face reacts on camera or a beat lands with the cut. Insula + cingulate. The “I feel this” signal.",
               },
               {
                 k: "Attention",
                 w: "25%",
-                body: "Fires when the edit refuses to let the eye rest. Parietal + frontal — the “I can’t look away” signal.",
+                body: "Fires when the edit refuses to let the eye rest. Parietal + frontal. The “I can’t look away” signal.",
               },
               {
                 k: "Memory",
                 w: "20%",
-                body: "Fires when the close calls back to the open. Parahippocampal + DMN — the “I’ll remember this” signal.",
+                body: "Fires when the close calls back to the open. Parahippocampal + DMN. The “I’ll remember this” signal.",
               },
             ].map((row, idx) => (
               <li

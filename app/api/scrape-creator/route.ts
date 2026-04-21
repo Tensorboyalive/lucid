@@ -74,7 +74,7 @@ function truncate(s: string, n: number): string {
 }
 
 function formatViews(n: number | undefined): string {
-  if (!n || n <= 0) return "—";
+  if (!n || n <= 0) return "·";
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${Math.round(n / 1000)}K`;
   return String(n);
