@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { PUBLIC_ONLY, isGatedRoute } from "@/lib/config";
 
 /**
  * Lightweight per-IP in-memory rate limiter. Sized for hackathon demo traffic —
@@ -47,7 +48,37 @@ function normalizeRoute(pathname: string): string | null {
 }
 
 export function middleware(req: NextRequest) {
-  const route = normalizeRoute(req.nextUrl.pathname);
+  const pathname = req.nextUrl.pathname;
+
+  // Public-only deploy: gated product routes redirect to the waitlist so the
+  // share-safe build never reveals the app. The `?locked=` param lets
+  // /waitlist render a soft banner naming which surface the visitor was
+  // trying to reach.
+  if (PUBLIC_ONLY && isGatedRoute(pathname)) {
+    const url = req.nextUrl.clone();
+    const rootSlug = pathname.slice(1).split("/")[0];
+    url.pathname = "/waitlist";
+    url.search = `?locked=${encodeURIComponent(rootSlug)}`;
+    return NextResponse.redirect(url, 307);
+  }
+
+  // Public-only deploy: the product's LLM-backed API routes are unreachable.
+  // A direct POST from a bot or a curious stranger should not burn Anthropic
+  // or Gemini quota — return 410 Gone so the endpoint reads as retired, not
+  // temporarily broken. /api/waitlist stays open because the form needs it.
+  if (
+    PUBLIC_ONLY &&
+    pathname.startsWith("/api/") &&
+    pathname !== "/api/waitlist" &&
+    !pathname.startsWith("/api/waitlist/")
+  ) {
+    return NextResponse.json(
+      { error: "gone", message: "This endpoint is not available on the public build." },
+      { status: 410 },
+    );
+  }
+
+  const route = normalizeRoute(pathname);
   if (!route) return NextResponse.next();
 
   const limit = LIMITS[route];
@@ -81,5 +112,11 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/:path*"],
+  matcher: [
+    "/api/:path*",
+    "/score/:path*",
+    "/research/:path*",
+    "/rewrite/:path*",
+    "/business/:path*",
+  ],
 };

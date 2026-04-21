@@ -1,7 +1,18 @@
 import Link from "next/link";
 import { HighlightChip } from "./HighlightChip";
+import { PUBLIC_ONLY } from "@/lib/config";
 
 export function Hero() {
+  // On the public / pre-launch build the hero funnels everyone into the
+  // waitlist. The secondary link points at /proof (still public) so a
+  // skeptic can see the receipts without being asked for an email first.
+  const primaryHref = PUBLIC_ONLY ? "/waitlist" : "/score";
+  const primaryLabel = PUBLIC_ONLY ? "Get early access" : "Score my reel";
+  const secondaryHref = PUBLIC_ONLY ? "/proof" : "/research";
+  const secondaryLabel = PUBLIC_ONLY
+    ? "or see the receipts"
+    : "or research a creator";
+
   return (
     <div className="relative overflow-hidden rule-bottom">
       <div className="mx-auto grid w-full max-w-[1400px] grid-cols-12 gap-6 px-6 pb-24 pt-10 md:px-10 md:pt-20 lg:px-14 lg:pb-40 lg:pt-24">
@@ -49,20 +60,20 @@ export function Hero() {
           </p>
           <div className="mt-12 flex flex-wrap items-center gap-4">
             <Link
-              href="/score"
+              href={primaryHref}
               className="inline-flex items-center gap-3 rounded-full bg-ink px-7 py-4 text-cream transition hover:bg-viral"
             >
               <span className="mono text-[0.82rem] uppercase tracking-[0.22em]">
-                Score my reel
+                {primaryLabel}
               </span>
               <span aria-hidden>→</span>
             </Link>
             <Link
-              href="/research"
+              href={secondaryHref}
               className="mono inline-flex items-center gap-2 text-[0.82rem] uppercase tracking-[0.22em] text-ink/75 hover:text-viral"
             >
               <span className="underline underline-offset-[6px]">
-                or research a creator
+                {secondaryLabel}
               </span>
             </Link>
           </div>

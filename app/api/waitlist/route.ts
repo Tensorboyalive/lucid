@@ -13,6 +13,34 @@ export const maxDuration = 10;
 const MAX_UA_LEN = 256;
 
 /**
+ * Fire-and-forget Slack notification. Lets Manav see the list grow in real
+ * time from a channel without running a dashboard. Fails silently — the
+ * signup itself is what matters, not the ping.
+ */
+async function notifySlack(body: {
+  email: string;
+  source?: string;
+  duplicate: boolean;
+}): Promise<void> {
+  const webhook = process.env.SLACK_WAITLIST_WEBHOOK;
+  if (!webhook) return;
+  const masked = body.email.replace(/^(.).+(@.+)$/, "$1***$2");
+  const text = body.duplicate
+    ? `waitlist repeat · ${masked}${body.source ? ` · ${body.source}` : ""}`
+    : `waitlist signup · ${masked}${body.source ? ` · ${body.source}` : ""}`;
+  try {
+    await fetch(webhook, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+      signal: AbortSignal.timeout(3_000),
+    });
+  } catch {
+    // intentional — Slack being down never fails a signup
+  }
+}
+
+/**
  * Opaque per-day client hash so we can see repeat-offender patterns without
  * retaining raw IPs. The salt rotates daily (UTC midnight), which is a weak
  * but deliberate anti-profiling move — two signups from the same IP on the
@@ -107,6 +135,15 @@ export async function POST(req: NextRequest) {
       { status: 503 },
     );
   }
+
+  // Side-effect: ping Slack without blocking the response. The client
+  // already received success in the render path above; this is pure
+  // operator observability.
+  void notifySlack({
+    email: body.email,
+    source: body.source,
+    duplicate: result.duplicate === true,
+  });
 
   return Response.json({ ok: true, status: handleWaitlistConflict(result) });
 }

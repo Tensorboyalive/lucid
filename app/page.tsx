@@ -5,30 +5,38 @@ import { Marquee } from "@/components/editorial/Marquee";
 import { Section } from "@/components/editorial/Section";
 import { Pullquote } from "@/components/editorial/Pullquote";
 import { HighlightChip } from "@/components/editorial/HighlightChip";
+import { PUBLIC_ONLY } from "@/lib/config";
 
+// On the public / pre-launch build every surface teaser points at the
+// waitlist instead of the live product — the visitor can read the pitch,
+// then join the list. On the private build each card goes to its real tool.
 const surfaces = [
   {
     tag: "01 · Score",
     title: "The mirror.",
     body: "Paste a reel. The Alpha engine maps 20,484 cortical vertices every second. You get a score, a scene timeline, and the exact moments where the brain went dark.",
-    href: "/score",
-    cta: "Score a reel",
+    privateHref: "/score",
+    privateCta: "Score a reel",
   },
   {
     tag: "02 · Research",
     title: "The inspiration.",
     body: "Type a handle. We pull their 20 most-watched reels, transcribe them, and open a chat with the viral engine about what actually worked. Patterns, hooks, pacing.",
-    href: "/research",
-    cta: "Research a creator",
+    privateHref: "/research",
+    privateCta: "Research a creator",
   },
   {
     tag: "03 · Rewrite",
     title: "The execution.",
     body: "Paste a draft. The Gamma engine, anchored to fMRI patterns and real viral transcripts, returns a rewritten script plus shooting directions. Frame by frame.",
-    href: "/rewrite",
-    cta: "Rewrite a script",
+    privateHref: "/rewrite",
+    privateCta: "Rewrite a script",
   },
-];
+].map((s) => ({
+  ...s,
+  href: PUBLIC_ONLY ? "/waitlist" : s.privateHref,
+  cta: PUBLIC_ONLY ? "Get early access" : s.privateCta,
+}));
 
 const marqueeItems = [
   "20,484 cortical vertices",
@@ -50,7 +58,7 @@ export default function Home() {
 
       <Marquee items={marqueeItems} tone="orange" />
 
-      <Section tone="cream" className="py-24 md:py-36">
+      <Section tone="cream" className="py-14 md:py-36">
         <div className="grid grid-cols-12 gap-6 md:gap-10">
           <div className="col-span-12 md:col-span-4">
             <div className="mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
@@ -76,6 +84,15 @@ export default function Home() {
                   key={s.tag}
                   className="group relative flex flex-col gap-5 rounded-sm border border-ink/15 bg-paper p-7 transition hover:border-viral hover:bg-cream md:min-h-[22rem]"
                 >
+                  {PUBLIC_ONLY && (
+                    <span
+                      aria-hidden
+                      className="mono absolute right-5 top-5 inline-flex items-center gap-1.5 rounded-full border border-ink/20 bg-cream px-2.5 py-1 text-[0.58rem] uppercase tracking-[0.22em] text-ink/60"
+                    >
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-viral" />
+                      <span>Early access</span>
+                    </span>
+                  )}
                   <h3
                     className="serif leading-[1]"
                     style={{ fontSize: "clamp(2rem, calc(1rem + 1.5vw), 2.75rem)" }}
@@ -95,7 +112,7 @@ export default function Home() {
         </div>
       </Section>
 
-      <Section tone="ink" className="py-24 md:py-36">
+      <Section tone="ink" className="py-14 md:py-36">
         <Pullquote
           attribution="the thesis"
           tone="ink"
@@ -106,7 +123,7 @@ export default function Home() {
         </Pullquote>
       </Section>
 
-      <Section tone="cream" className="py-24 md:py-36">
+      <Section tone="cream" className="py-14 md:py-36">
         <div className="grid grid-cols-12 gap-6">
           <div className="col-span-12 md:col-span-5">
             <div className="mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
@@ -172,7 +189,7 @@ export default function Home() {
         </div>
       </Section>
 
-      <Section tone="paper" className="py-24 md:py-36">
+      <Section tone="paper" className="py-14 md:py-36">
         <div className="grid grid-cols-12 gap-8">
           <div className="col-span-12 md:col-span-6">
             <div className="mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
@@ -244,10 +261,11 @@ export default function Home() {
               the studios that buy attention by the GPU hour.
             </p>
             <Link
-              href="/business"
+              href={PUBLIC_ONLY ? "/waitlist" : "/business"}
               className="mono mt-8 inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 text-[0.72rem] uppercase tracking-[0.24em] text-cream hover:bg-viral"
             >
-              See the business page <span aria-hidden>→</span>
+              {PUBLIC_ONLY ? "Get early access" : "See the business page"}{" "}
+              <span aria-hidden>→</span>
             </Link>
           </div>
           <div className="col-span-12 md:col-span-7">
@@ -299,11 +317,18 @@ export default function Home() {
             </p>
           </div>
           <div className="mono flex flex-wrap gap-x-6 gap-y-2 text-[0.72rem] uppercase tracking-[0.24em] text-cream/60">
-            <Link href="/score" className="hover:text-viral">Score</Link>
-            <Link href="/research" className="hover:text-viral">Research</Link>
-            <Link href="/rewrite" className="hover:text-viral">Rewrite</Link>
+            {!PUBLIC_ONLY && (
+              <>
+                <Link href="/score" className="hover:text-viral">Score</Link>
+                <Link href="/research" className="hover:text-viral">Research</Link>
+                <Link href="/rewrite" className="hover:text-viral">Rewrite</Link>
+              </>
+            )}
             <Link href="/proof" className="hover:text-viral">Proof</Link>
-            <Link href="/business" className="hover:text-viral">Business</Link>
+            {!PUBLIC_ONLY && (
+              <Link href="/business" className="hover:text-viral">Business</Link>
+            )}
+            <Link href="/waitlist" className="hover:text-viral">Waitlist</Link>
             <a
               href="https://github.com/Tensorboyalive/lucid"
               className="hover:text-viral"

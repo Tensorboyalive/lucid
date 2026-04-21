@@ -3,12 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
+import { PUBLIC_ONLY } from "@/lib/config";
 
 interface Props {
   tone?: "cream" | "ink";
 }
 
-const LINKS = [
+/**
+ * Full product nav. Private deploy only. Gives access to every surface.
+ */
+const FULL_LINKS = [
   ["Score", "/score"],
   ["Research", "/research"],
   ["Rewrite", "/rewrite"],
@@ -16,6 +20,21 @@ const LINKS = [
   ["Business", "/business"],
   ["Waitlist", "/waitlist"],
 ] as const;
+
+/**
+ * Pre-launch nav. Public deploy. Two links — Proof (receipts) and Waitlist
+ * (the CTA). Nothing else is reachable, so nothing else should advertise
+ * itself.
+ */
+const PUBLIC_LINKS = [
+  ["Proof", "/proof"],
+  ["Waitlist", "/waitlist"],
+] as const;
+
+const LINKS = PUBLIC_ONLY ? PUBLIC_LINKS : FULL_LINKS;
+
+const CTA_LABEL = PUBLIC_ONLY ? "Get early access" : "Score a reel";
+const CTA_HREF = PUBLIC_ONLY ? "/waitlist" : "/score";
 
 export function Nav({ tone = "cream" }: Props) {
   const isInk = tone === "ink";
@@ -48,7 +67,7 @@ export function Nav({ tone = "cream" }: Props) {
 
       <div className="flex items-center gap-3">
         <Link
-          href="/score"
+          href={CTA_HREF}
           className={cn(
             "mono inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 py-2 text-[0.72rem] uppercase tracking-[0.24em] transition",
             isInk
@@ -56,7 +75,7 @@ export function Nav({ tone = "cream" }: Props) {
               : "bg-ink text-cream hover:bg-viral hover:text-ink",
           )}
         >
-          <span>Score a reel</span>
+          <span>{CTA_LABEL}</span>
           <span aria-hidden>→</span>
         </Link>
         {/* Mobile menu trigger */}

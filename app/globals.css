@@ -69,6 +69,48 @@ html, body {
 .highlight-cream  { background: var(--cream); color: var(--ink); border: 1px solid var(--ink); }
 .highlight-ink    { background: var(--ink); color: var(--cream); }
 
+/* Engine-pulse aside on /waitlist — slow, breathing motion on the four
+ * network bars. Each bar gets its own animation-delay so the block never
+ * lines up on a beat. One dot pulses next to "live engine pulse" to
+ * reinforce that the product is real, not a prop. */
+@keyframes enginePulseFill {
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scaleX(0.94);
+    opacity: 0.76;
+  }
+}
+@keyframes enginePulseDot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+}
+.engine-pulse-fill {
+  transform-origin: left center;
+  animation: enginePulseFill 4.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  will-change: transform, opacity;
+}
+.engine-pulse-dot {
+  animation: enginePulseDot 1.8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+@media (prefers-reduced-motion: reduce) {
+  .engine-pulse-fill,
+  .engine-pulse-dot {
+    animation: none;
+  }
+}
+
 .strike {
   position: relative;
   display: inline-block;
